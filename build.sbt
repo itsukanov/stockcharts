@@ -1,17 +1,17 @@
 import Dependencies._
 
-organization := "itsukanov.com"
+organization := "com.itsukanov"
 
-scalaVersion := "2.12.3"
+scalaVersion in ThisBuild := "2.12.3"
 
 lazy val root = project.in(file("."))
 
 lazy val common = project.in(file("common"))
   .settings(commonDeps)
 
-lazy val `writer-in-kafka` = project.in(file("writer-in-kafka"))
+lazy val `external-source-extractor` = project.in(file("external-source-extractor"))
   .dependsOn(common)
-  .settings(writerInKafkaDeps)
+  .settings(externalSourceExtractorDeps)
 //  .settings(mainClass in assembly := Some("casino.fraud.inspector.Inspector"))
 //  .settings(
 //    name := "inspector",
@@ -25,4 +25,3 @@ lazy val `writer-in-kafka` = project.in(file("writer-in-kafka"))
 //      }
 //    }
 //  )
-
