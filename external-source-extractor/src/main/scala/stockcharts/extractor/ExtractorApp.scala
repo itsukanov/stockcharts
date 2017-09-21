@@ -9,7 +9,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
 
-object MainApp extends App {
+object ExtractorApp extends App {
 
   val cfg = ConfigFactory.load()
 
