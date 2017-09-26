@@ -5,7 +5,9 @@ object Dependencies {
   import GlobalExclusions._
 
   val commonDeps = libraryDependencies ++= Seq(
-    "ch.qos.logback" % "logback-classic" % "1.2.3"
+    "ch.qos.logback" % "logback-classic" % "1.2.3",
+    "com.typesafe.akka" %% "akka-stream-kafka" % "0.17",
+    "com.typesafe.akka" %% "akka-actor" % "2.5.4"
   )
 
   val externalSourceExtractorDeps = libraryDependencies ++= Seq(
