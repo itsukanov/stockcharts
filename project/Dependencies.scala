@@ -4,21 +4,28 @@ import sbt.Keys._
 object Dependencies {
   import GlobalExclusions._
 
+  val akkaVersion = "2.5.4"
+  val akkaHttpVersion = "10.0.10"
+  private val akkaHttp = "com.typesafe.akka" %% "akka-http" % akkaHttpVersion
+
   val commonDeps = libraryDependencies ++= Seq(
     "com.typesafe" % "config" % "1.3.1",
     "com.iheart" %% "ficus" % "1.4.0",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
 
     "com.typesafe.akka" %% "akka-stream-kafka" % "0.17",
-    "com.typesafe.akka" %% "akka-actor" % "2.5.4"
+    "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+    "com.typesafe.akka" %% "akka-stream" % akkaVersion
   )
 
   val externalSourceExtractorDeps = libraryDependencies ++= Seq(
-    "com.typesafe.akka" %% "akka-http" % "10.0.9",
+    akkaHttp,
     "org.json4s" %% "json4s-native" % "3.5.3"
   )
 
-  val uiDeps = libraryDependencies ++= Seq()
+  val uiDeps = libraryDependencies ++= Seq(
+    akkaHttp
+  )
 
   val kafkaDeps = libraryDependencies ++= Seq(
     "net.manub" %% "scalatest-embedded-kafka-streams" % "0.15.1"
