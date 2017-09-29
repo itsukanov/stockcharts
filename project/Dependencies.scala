@@ -5,7 +5,10 @@ object Dependencies {
   import GlobalExclusions._
 
   val commonDeps = libraryDependencies ++= Seq(
+    "com.typesafe" % "config" % "1.3.1",
+    "com.iheart" %% "ficus" % "1.4.0",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
+
     "com.typesafe.akka" %% "akka-stream-kafka" % "0.17",
     "com.typesafe.akka" %% "akka-actor" % "2.5.4"
   )

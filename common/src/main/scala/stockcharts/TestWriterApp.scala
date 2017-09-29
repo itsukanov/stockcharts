@@ -27,7 +27,7 @@ object TestWriterApp extends App {
   val done = Source(1 to 10)
     .map(_.toString)
     .map { elem =>
-      new ProducerRecord[Array[Byte], String]("topic1", "42")
+      new ProducerRecord[Array[Byte], String](Config.Kafka.Topics.userCommands.name, 1, null, elem)
     }
     .runWith(Producer.plainSink(producerSettings))
 
