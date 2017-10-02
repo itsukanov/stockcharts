@@ -1,11 +1,22 @@
 var nbrOfBarsTotal = 91;
 var nbrOfBarsOnChart = 90;
 
+var debugEnabled = false;
+
 var showNewBarEveryMs = 101;
 var sendNewBarEveryMs = 5;
 var stockName = "Facebook";
 
-var baseUrl = "/simulate"
+var baseUrl = "/simulate";
+
+var id2QParamName = {
+    "stock-dropdown": "stock",
+    "rsiBuy": "rsiBuy",
+    "rsiSell": "rsiSell",
+    "takeProfit": "takeProfit",
+    "stopLoss": "stopLoss"
+}
+var inputIds = Object.keys(id2QParamName);
 
 var websocketEchoServerUri = "wss://echo.websocket.org/";
 var websocket = initWebSocket(websocketEchoServerUri);
@@ -26,21 +37,14 @@ var stockEvents = [];
 var trendLines = [];
 
 $(function(){
+     initInputs();
+
      $(".dropdown-item").click(function(){
          var selText = $(this).text();
          $(this).parents('.dropdown').find('.dropdown-toggle').html(selText);
      });
 
      $("#start-btn").click(function(){
-        var id2Param = {
-            "stock-dropdown": "stock",
-            "rsiBuy": "rsiBuy",
-            "rsiSell": "rsiSell",
-            "takeProfit": "takeProfit",
-            "stopLoss": "stopLoss"
-        }
-        var ids = Object.keys(id2Param);
-
         function getValue(id) {
           if (id.includes('dropdown')) {
               return $("#" + id).text().trim();
@@ -53,13 +57,11 @@ $(function(){
           return !(str == "" || str == null);
         }
 
-        var newSimulationUrl = ids.filter(function (id) {
+        var newSimulationUrl = inputIds.filter(function (id) {
           return isNotBlank(getValue(id));
-        })
-        .map(function (id) {
-          return id2Param[id] + "=" + getValue(id);
-        })
-        .join("&");
+        }).map(function (id) {
+          return id2QParamName[id] + "=" + getValue(id);
+        }).join("&");
 
         window.location.href = baseUrl + "?" + newSimulationUrl;
      });
@@ -268,12 +270,6 @@ $(function(){
               }
             } );
 })
-
-function getPriceByDate(date) {
-    return priceData.filter(function(x) {
-        return x.date == date;
-    })[0]
-}
 
 var order1 = {
     id: 42,
@@ -494,7 +490,27 @@ function onClose(wsEvent) {
 }
 
 function log(msg) {
-//    console.log(msg);
+  if (debugEnabled) {
+    console.log(msg);
+  }
+}
+
+function initInputs() {
+  inputIds.map(function (id) {
+    setInput(id2QParamName[id], id);
+  });
+}
+
+function setInput(qParam, inputId) {
+  if (inputId.includes('dropdown')) {
+    $("#" + inputId).parents('.dropdown').find('.dropdown-toggle').html(getQueryParam(qParam));
+  }
+  $("#" + inputId).val(getQueryParam(qParam));
+}
+
+function getQueryParam(param) {
+  var url = new URL(window.location.href);
+  return url.searchParams.get(param);
 }
 
 function makeDateGenerator() {
