@@ -9,16 +9,6 @@ object Config {
 
   private val conf = ConfigFactory.load()
 
-  object Simulation {
-    object Default {
-      val rsiBuy = conf.getDouble("simulation.default.rsi-buy")
-      val rsiSell = conf.getDouble("simulation.default.rsi-sell")
-      val takeProfit = conf.getInt("simulation.default.take-profit-cents")
-      val stopLoss = conf.getInt("simulation.default.stop-loss-cents")
-    }
-
-  }
-
   object UI {
     val host = conf.getString("ui.host")
     val port = conf.getInt("ui.port")

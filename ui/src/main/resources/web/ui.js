@@ -1,9 +1,22 @@
-var nbrOfBarsTotal = 300;
+var nbrOfBarsTotal = 91;
 var nbrOfBarsOnChart = 90;
+
+var debugEnabled = false;
 
 var showNewBarEveryMs = 101;
 var sendNewBarEveryMs = 5;
 var stockName = "Facebook";
+
+var baseUrl = "/simulate";
+
+var id2QParamName = {
+    "stock-dropdown": "stock",
+    "rsiBuy": "rsiBuy",
+    "rsiSell": "rsiSell",
+    "takeProfit": "takeProfit",
+    "stopLoss": "stopLoss"
+}
+var inputIds = Object.keys(id2QParamName);
 
 var websocketEchoServerUri = "wss://echo.websocket.org/";
 var websocket = initWebSocket(websocketEchoServerUri);
@@ -24,7 +37,36 @@ var stockEvents = [];
 var trendLines = [];
 
 $(function(){
-    chart = AmCharts.makeChart( "chartdiv", {
+     initInputs();
+
+     $(".dropdown-item").click(function(){
+         var selText = $(this).text();
+         $(this).parents('.dropdown').find('.dropdown-toggle').html(selText);
+     });
+
+     $("#start-btn").click(function(){
+        function getValue(id) {
+          if (id.includes('dropdown')) {
+              return $("#" + id).text().trim();
+          } else {
+              return $("#" + id).val().trim();
+          }
+        }
+
+        function isNotBlank(str) {
+          return !(str == "" || str == null);
+        }
+
+        var newSimulationUrl = inputIds.filter(function (id) {
+          return isNotBlank(getValue(id));
+        }).map(function (id) {
+          return id2QParamName[id] + "=" + getValue(id);
+        }).join("&");
+
+        window.location.href = baseUrl + "?" + newSimulationUrl;
+     });
+
+     chart = AmCharts.makeChart( "chartdiv", {
               "type": "stock",
               "theme": "dark",
               "addClassNames": true,
@@ -228,12 +270,6 @@ $(function(){
               }
             } );
 })
-
-function getPriceByDate(date) {
-    return priceData.filter(function(x) {
-        return x.date == date;
-    })[0]
-}
 
 var order1 = {
     id: 42,
@@ -454,7 +490,27 @@ function onClose(wsEvent) {
 }
 
 function log(msg) {
+  if (debugEnabled) {
     console.log(msg);
+  }
+}
+
+function initInputs() {
+  inputIds.map(function (id) {
+    setInput(id2QParamName[id], id);
+  });
+}
+
+function setInput(qParam, inputId) {
+  if (inputId.includes('dropdown')) {
+    $("#" + inputId).parents('.dropdown').find('.dropdown-toggle').html(getQueryParam(qParam));
+  }
+  $("#" + inputId).val(getQueryParam(qParam));
+}
+
+function getQueryParam(param) {
+  var url = new URL(window.location.href);
+  return url.searchParams.get(param);
 }
 
 function makeDateGenerator() {
