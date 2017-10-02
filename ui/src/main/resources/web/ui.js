@@ -1,9 +1,11 @@
-var nbrOfBarsTotal = 300;
+var nbrOfBarsTotal = 91;
 var nbrOfBarsOnChart = 90;
 
 var showNewBarEveryMs = 101;
 var sendNewBarEveryMs = 5;
 var stockName = "Facebook";
+
+var baseUrl = "/simulate"
 
 var websocketEchoServerUri = "wss://echo.websocket.org/";
 var websocket = initWebSocket(websocketEchoServerUri);
@@ -24,7 +26,45 @@ var stockEvents = [];
 var trendLines = [];
 
 $(function(){
-    chart = AmCharts.makeChart( "chartdiv", {
+     $(".dropdown-item").click(function(){
+         var selText = $(this).text();
+         $(this).parents('.dropdown').find('.dropdown-toggle').html(selText);
+     });
+
+     $("#start-btn").click(function(){
+        var id2Param = {
+            "stock-dropdown": "stock",
+            "rsiBuy": "rsiBuy",
+            "rsiSell": "rsiSell",
+            "takeProfit": "takeProfit",
+            "stopLoss": "stopLoss"
+        }
+        var ids = Object.keys(id2Param);
+
+        function getValue(id) {
+          if (id.includes('dropdown')) {
+              return $("#" + id).text().trim();
+          } else {
+              return $("#" + id).val().trim();
+          }
+        }
+
+        function isNotBlank(str) {
+          return !(str == "" || str == null);
+        }
+
+        var newSimulationUrl = ids.filter(function (id) {
+          return isNotBlank(getValue(id));
+        })
+        .map(function (id) {
+          return id2Param[id] + "=" + getValue(id);
+        })
+        .join("&");
+
+        window.location.href = baseUrl + "?" + newSimulationUrl;
+     });
+
+     chart = AmCharts.makeChart( "chartdiv", {
               "type": "stock",
               "theme": "dark",
               "addClassNames": true,
@@ -454,7 +494,7 @@ function onClose(wsEvent) {
 }
 
 function log(msg) {
-    console.log(msg);
+//    console.log(msg);
 }
 
 function makeDateGenerator() {
