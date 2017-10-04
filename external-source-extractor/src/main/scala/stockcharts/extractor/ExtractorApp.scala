@@ -1,30 +1,30 @@
 package stockcharts.extractor
 
-import akka.actor.ActorSystem
+import java.time.LocalDate
+
+import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
-import com.typesafe.config.ConfigFactory
+import org.slf4j.LoggerFactory
+import stockcharts.Config.StockSources.Quandl
 import stockcharts.extractor.quandl.QuandlClient
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext}
-
+case class Price(date: LocalDate,
+                 open: Double,
+                 high: Double,
+                 low: Double,
+                 close: Double)
 
 object ExtractorApp extends App {
 
-  val cfg = ConfigFactory.load()
+  val log = LoggerFactory.getLogger(this.getClass)
 
-  val actorSystem = ActorSystem("data-generator", cfg)
-  val executionContext = ExecutionContext.global
-  val materializer = ActorMaterializer()(actorSystem)
+  val actorSystem = ActorSystem("extractor-app")
+  import actorSystem.dispatcher
+  implicit val materializer = ActorMaterializer()(actorSystem)
 
-  val quandlClient = new QuandlClient(
-    cfg.getString("data-source.base-url"),
-    cfg.getString("data-source.api_key"),
-    actorSystem)(executionContext, materializer)
+  val quandlClient = new QuandlClient(Quandl.baseUrl, Quandl.apiKey, actorSystem)
+  val extractorManager = actorSystem.actorOf(Props(classOf[PricesExtractorManager], quandlClient), "prices-extractor-manager")
 
-  val fut = quandlClient.getStockData("FB")
-
-  val res = Await.result(fut, Duration.Inf)
-  println(res)
+  extractorManager ! Extractor.ExtractPricesIfNecessary(Stock(StockId("FBK"), "Facebook"))
 
 }

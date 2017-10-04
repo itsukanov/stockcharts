@@ -9,6 +9,13 @@ object Config {
 
   private val conf = ConfigFactory.load()
 
+  object StockSources {
+    object Quandl {
+      val baseUrl = conf.getString("stock-sources.quandl.base-url")
+      val apiKey = conf.getString("stock-sources.quandl.api-key")
+    }
+  }
+
   object UI {
     val host = conf.getString("ui.host")
     val port = conf.getInt("ui.port")
