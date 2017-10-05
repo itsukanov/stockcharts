@@ -33,6 +33,8 @@ object Config {
     val host = conf.getString("kafka.host")
     val port = conf.getInt("kafka.port")
 
+    val serverUrl = s"$host:$port"
+
     object Topics {
 
       val userCommands = KafkaTopic(
