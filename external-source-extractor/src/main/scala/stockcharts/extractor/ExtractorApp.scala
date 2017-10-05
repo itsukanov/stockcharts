@@ -1,19 +1,11 @@
 package stockcharts.extractor
 
-import java.time.LocalDate
-
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import org.slf4j.LoggerFactory
 import stockcharts.Config.StockSources.Quandl
 import stockcharts.extractor.quandl.QuandlClient
 import stockcharts.models.{Stock, StockId}
-
-case class Price(date: LocalDate,
-                 open: Double,
-                 high: Double,
-                 low: Double,
-                 close: Double)
 
 object ExtractorApp extends App {
 

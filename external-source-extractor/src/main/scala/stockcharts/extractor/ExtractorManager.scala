@@ -76,7 +76,7 @@ class PricesExtractor(client: QuandlClient, stock: Stock)(implicit materializer:
   def extractPricesToKafka(): Future[Unit] = {
     val fut = client.getStockData("FB")
     val res = Await.result(fut, Duration.Inf)
-    log.info(res)
+    log.info(res.mkString(", "))
 
     Future.successful()
   }
