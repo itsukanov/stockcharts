@@ -5,12 +5,12 @@ import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
 import akka.pattern.pipe
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Keep, Source}
-import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.LoggerFactory
 import stockcharts.extractor.PricesExtractor.ExtractPricesIfNecessary
 import stockcharts.extractor.quandl.QuandlClient
+import stockcharts.json.JsonConverting
+import stockcharts.kafka.{KafkaRecords, KafkaSink, KafkaUtils}
 import stockcharts.models.{Stock, StockId}
-import stockcharts.kafka.{KafkaSink, KafkaUtils}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -78,10 +78,9 @@ class PricesExtractor(client: QuandlClient, stock: Stock)(implicit materializer:
       prices <- client.getStockPrices(stock.stockId.id)
       kafka = KafkaSink()
       stream = Source(prices)
-        .map(_.toString)
-        .map { elem =>
-          new ProducerRecord[Array[Byte], String](stock.topic, null, elem)
-        }.toMat(kafka)(Keep.right)
+        .via(JsonConverting.toJsonFlow)
+        .via(KafkaRecords.toKafkaRecordFlow(stock.topic))
+        .toMat(kafka)(Keep.right)
       saving <- stream.run()
     } yield saving
 
