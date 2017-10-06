@@ -15,7 +15,8 @@ object Dependencies {
 
     "com.typesafe.akka" %% "akka-stream-kafka" % "0.17",
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
-    "com.typesafe.akka" %% "akka-stream" % akkaVersion
+    "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+    "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
   )
 
   val externalSourceExtractorDeps = libraryDependencies ++= Seq(
