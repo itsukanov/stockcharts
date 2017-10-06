@@ -2,6 +2,8 @@ package stockcharts.models
 
 import java.time.LocalDate
 
+import com.typesafe.config.Config
+
 case class Price(date: LocalDate,
                  open: Double,
                  high: Double,
@@ -14,6 +16,6 @@ case class Stock(stockId: StockId, name: String) {
   val topic = s"prices_${stockId.id}"
 }
 
-object Stocks {
-
+object Stock {
+  def apply(conf: Config): Stock = new Stock(StockId(conf.getString("id")), conf.getString("name"))
 }

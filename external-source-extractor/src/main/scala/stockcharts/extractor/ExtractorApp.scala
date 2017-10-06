@@ -3,9 +3,9 @@ package stockcharts.extractor
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import org.slf4j.LoggerFactory
+import stockcharts.Config
 import stockcharts.Config.StockSources.Quandl
 import stockcharts.extractor.quandl.QuandlClient
-import stockcharts.models.{Stock, StockId}
 
 object ExtractorApp extends App {
 
@@ -17,6 +17,9 @@ object ExtractorApp extends App {
   val quandlClient = new QuandlClient(Quandl.baseUrl, Quandl.apiKey, system)(system.dispatcher, materializer) // todo change actorSystem.dispatcher to another context
   val extractorManager = system.actorOf(PricesExtractorManager.props(quandlClient), "prices-extractor-manager")
 
-  extractorManager ! Extractor.ExtractPricesIfNecessary(Stock(StockId("FBK"), "Facebook"))
+  Config.Stocks.all.foreach { stock =>
+    Thread.sleep(1200) // todo replace with SINGLE throttling inside QuandlClient
+    extractorManager ! Extractor.ExtractPricesIfNecessary(stock)
+  }
 
 }
