@@ -1,4 +1,4 @@
-package stockcharts
+package stockcharts.kafka
 
 import java.util.concurrent.TimeoutException
 

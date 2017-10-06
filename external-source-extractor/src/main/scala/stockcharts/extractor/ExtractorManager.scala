@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 import stockcharts.extractor.PricesExtractor.ExtractPricesIfNecessary
 import stockcharts.extractor.quandl.QuandlClient
 import stockcharts.models.{Stock, StockId}
-import stockcharts.{KafkaSink, KafkaUtils}
+import stockcharts.kafka.{KafkaSink, KafkaUtils}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._

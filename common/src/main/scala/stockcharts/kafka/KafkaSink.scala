@@ -1,9 +1,10 @@
-package stockcharts
+package stockcharts.kafka
 
 import akka.actor.ActorSystem
 import akka.kafka.ProducerSettings
 import akka.kafka.scaladsl.Producer
 import org.apache.kafka.common.serialization.{ByteArraySerializer, StringSerializer}
+import stockcharts.Config
 
 object KafkaSink {
 

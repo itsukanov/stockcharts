@@ -1,10 +1,11 @@
-package stockcharts
+package stockcharts.kafka
 
 import akka.actor.ActorSystem
-import akka.kafka.{ConsumerSettings, Subscriptions}
 import akka.kafka.scaladsl.Consumer
+import akka.kafka.{ConsumerSettings, Subscriptions}
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{ByteArrayDeserializer, StringDeserializer}
+import stockcharts.Config
 
 trait OffsetReset {
   def value: String
