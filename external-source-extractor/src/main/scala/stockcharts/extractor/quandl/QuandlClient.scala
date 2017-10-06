@@ -27,7 +27,7 @@ class QuandlClient(baseUrl: String,
   private def getDatasetUrl(stockName: String) =
     s"$baseUrl/$stockName/data.json?api_key=$apiKey"
 
-  def getStockData(stock: String): Future[List[Price]] =
+  def getStockPrices(stock: String): Future[List[Price]] =
     httpClient
       .singleRequest(HttpRequest(uri = getDatasetUrl(stock)))
       .flatMap(getContentIf200)

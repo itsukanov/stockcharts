@@ -19,7 +19,7 @@ object ExtractorApp extends App {
 
   Config.Stocks.all.foreach { stock =>
     Thread.sleep(1200) // todo replace with SINGLE throttling inside QuandlClient
-    extractorManager ! Extractor.ExtractPricesIfNecessary(stock)
+    extractorManager ! PricesExtractor.ExtractPricesIfNecessary(stock)
   }
 
 }

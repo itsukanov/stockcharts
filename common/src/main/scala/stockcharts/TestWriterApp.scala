@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.kafka.ProducerSettings
 import akka.kafka.scaladsl.Producer
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{Keep, Source}
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.{ByteArraySerializer, StringSerializer}
 import org.slf4j.LoggerFactory
@@ -30,7 +30,8 @@ object TestWriterApp extends App {
     .map { elem =>
       new ProducerRecord[Array[Byte], String](Stock(StockId("FBK"), "Facebook").topic, 0, null, elem)
     }
-    .runWith(Producer.plainSink(producerSettings))
+    .toMat(Producer.plainSink(producerSettings))(Keep.right)
+    .run()
 
   done.onComplete {
     case Success(_) => logger.info("writing done")

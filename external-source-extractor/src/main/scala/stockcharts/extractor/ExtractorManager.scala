@@ -1,22 +1,20 @@
 package stockcharts.extractor
 
+import akka.Done
 import akka.actor.{Actor, ActorRef, Props, Stash, Terminated}
 import akka.pattern.pipe
 import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.{Keep, Source}
+import org.apache.kafka.clients.producer.ProducerRecord
 import org.slf4j.LoggerFactory
-import stockcharts.KafkaUtils
-import stockcharts.extractor.Extractor.ExtractPricesIfNecessary
+import stockcharts.extractor.PricesExtractor.ExtractPricesIfNecessary
 import stockcharts.extractor.quandl.QuandlClient
 import stockcharts.models.{Stock, StockId}
+import stockcharts.{KafkaSink, KafkaUtils}
 
-import scala.concurrent.duration.Duration
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
-
-object Extractor {
-  case class ExtractPricesIfNecessary(stock: Stock)
-}
 
 trait PricesState
 
@@ -56,6 +54,8 @@ class PricesExtractorManager(client: QuandlClient)(implicit materializer: ActorM
 }
 
 object PricesExtractor {
+  case class ExtractPricesIfNecessary(stock: Stock)
+
   def props(client: QuandlClient, stock: Stock)(implicit materializer: ActorMaterializer) = Props(new PricesExtractor(client, stock))
 }
 
@@ -73,12 +73,17 @@ class PricesExtractor(client: QuandlClient, stock: Stock)(implicit materializer:
       case false => PricesState.UpToDate
     }
 
-  def extractPricesToKafka(): Future[Unit] = {
-    val fut = client.getStockData(stock.stockId.id)
-    val res = Await.result(fut, Duration.Inf)
-
-    Future.successful()
-  }
+  def extractPricesToKafka(): Future[Done] =
+    for {
+      prices <- client.getStockPrices(stock.stockId.id)
+      kafka = KafkaSink()
+      stream = Source(prices)
+        .map(_.toString)
+        .map { elem =>
+          new ProducerRecord[Array[Byte], String](stock.topic, null, elem)
+        }.toMat(kafka)(Keep.right)
+      saving <- stream.run()
+    } yield saving
 
   val upToDatePrices: Receive = {
     case ExtractPricesIfNecessary(_) => log.debug("Prices are up-to-date, prices extraction is not necessary")
@@ -91,8 +96,7 @@ class PricesExtractor(client: QuandlClient, stock: Stock)(implicit materializer:
       context.become(upToDatePrices)
 
     case PricesState.Stale =>
-      extractPricesToKafka()
-        .map(_ => akka.Done) pipeTo self
+      extractPricesToKafka() pipeTo self
 
     case akka.Done =>
       log.debug(s"Prices for $stock has been successfully extracted to kafka")
