@@ -13,14 +13,16 @@ object Dependencies {
     "com.iheart" %% "ficus" % "1.4.0",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
 
+    "org.json4s" %% "json4s-native" % "3.5.3",
+
     "com.typesafe.akka" %% "akka-stream-kafka" % "0.17",
     "com.typesafe.akka" %% "akka-actor" % akkaVersion,
-    "com.typesafe.akka" %% "akka-stream" % akkaVersion
+    "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+    "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
   )
 
   val externalSourceExtractorDeps = libraryDependencies ++= Seq(
-    akkaHttp,
-    "org.json4s" %% "json4s-native" % "3.5.3"
+    akkaHttp
   )
 
   val uiDeps = libraryDependencies ++= Seq(

@@ -2,29 +2,24 @@ package stockcharts.extractor
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.typesafe.config.ConfigFactory
+import org.slf4j.LoggerFactory
+import stockcharts.Config
+import stockcharts.Config.StockSources.Quandl
 import stockcharts.extractor.quandl.QuandlClient
-
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext}
-
 
 object ExtractorApp extends App {
 
-  val cfg = ConfigFactory.load()
+  val log = LoggerFactory.getLogger(this.getClass)
 
-  val actorSystem = ActorSystem("data-generator", cfg)
-  val executionContext = ExecutionContext.global
-  val materializer = ActorMaterializer()(actorSystem)
+  val system = ActorSystem("extractor-app")
+  implicit val materializer = ActorMaterializer()(system)
 
-  val quandlClient = new QuandlClient(
-    cfg.getString("data-source.base-url"),
-    cfg.getString("data-source.api_key"),
-    actorSystem)(executionContext, materializer)
+  val quandlClient = new QuandlClient(Quandl.baseUrl, Quandl.apiKey, system)(system.dispatcher, materializer) // todo change actorSystem.dispatcher to another context
+  val extractorManager = system.actorOf(PricesExtractorManager.props(quandlClient), "prices-extractor-manager")
 
-  val fut = quandlClient.getStockData("FB")
-
-  val res = Await.result(fut, Duration.Inf)
-  println(res)
+  Config.Stocks.all.foreach { stock =>
+    Thread.sleep(1200) // todo replace with SINGLE throttling inside QuandlClient
+    extractorManager ! PricesExtractor.ExtractPricesIfNecessary(stock)
+  }
 
 }

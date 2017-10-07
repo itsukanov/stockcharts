@@ -2,12 +2,33 @@ package stockcharts
 
 import com.typesafe.config.ConfigFactory
 import net.ceedubs.ficus.Ficus._
+import stockcharts.models.Stock
 
 case class KafkaTopic(name: String, partitions: Int)
 
 object Config {
 
   private val conf = ConfigFactory.load()
+
+  object StockSources {
+    object Quandl {
+      val baseUrl = conf.getString("stock-sources.quandl.base-url")
+      val apiKey = conf.getString("stock-sources.quandl.api-key")
+    }
+  }
+
+  object Stocks {
+    val all = Seq(
+      Stock(conf.getConfig("stocks.facebook")),
+      Stock(conf.getConfig("stocks.ibm")),
+      Stock(conf.getConfig("stocks.apple")),
+      Stock(conf.getConfig("stocks.adobe")),
+      Stock(conf.getConfig("stocks.cisco")),
+      Stock(conf.getConfig("stocks.ebay")),
+      Stock(conf.getConfig("stocks.fox")),
+      Stock(conf.getConfig("stocks.google"))
+    )
+  }
 
   object UI {
     val host = conf.getString("ui.host")
@@ -25,6 +46,8 @@ object Config {
 
     val host = conf.getString("kafka.host")
     val port = conf.getInt("kafka.port")
+
+    val serverUrl = s"$host:$port"
 
     object Topics {
 

@@ -4,10 +4,11 @@ import akka.actor.ActorSystem
 import akka.kafka.ProducerSettings
 import akka.kafka.scaladsl.Producer
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{Keep, Source}
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.{ByteArraySerializer, StringSerializer}
 import org.slf4j.LoggerFactory
+import stockcharts.models.{Stock, StockId}
 
 import scala.util.{Failure, Success}
 
@@ -27,9 +28,10 @@ object TestWriterApp extends App {
   val done = Source(1 to 10)
     .map(_.toString)
     .map { elem =>
-      new ProducerRecord[Array[Byte], String](Config.Kafka.Topics.userCommands.name, 1, null, elem)
+      new ProducerRecord[Array[Byte], String](Stock(StockId("FBK"), "Facebook").topic, 0, null, elem)
     }
-    .runWith(Producer.plainSink(producerSettings))
+    .toMat(Producer.plainSink(producerSettings))(Keep.right)
+    .run()
 
   done.onComplete {
     case Success(_) => logger.info("writing done")
