@@ -85,12 +85,12 @@ class PricesExtractor(client: QuandlClient, stock: Stock)(implicit materializer:
     } yield saving
 
   val upToDatePrices: Receive = {
-    case ExtractPricesIfNecessary(_) => log.debug("Prices are up-to-date, prices extraction is not necessary")
+    case ExtractPricesIfNecessary(_) => log.debug(s"Prices for $stock are already up-to-date. Prices extraction is not necessary")
   }
 
   val checkingPricesStateOrExtracting: Receive = {
     case PricesState.UpToDate =>
-      log.debug(s"Prices for $stock are already up-to-date")
+      log.debug(s"Prices for $stock are already up-to-date. Prices extraction is not necessary")
       unstashAll()
       context.become(upToDatePrices)
 
