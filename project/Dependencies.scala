@@ -29,6 +29,10 @@ object Dependencies {
     akkaHttp
   )
 
+  val simulationDeps = libraryDependencies ++= Seq(
+    akkaHttp
+  )
+
   val kafkaDeps = libraryDependencies ++= Seq(
     "net.manub" %% "scalatest-embedded-kafka-streams" % "0.15.1"
   ).withoutLog4j

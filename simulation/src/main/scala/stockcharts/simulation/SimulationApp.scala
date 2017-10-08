@@ -1,22 +1,22 @@
-package stockcharts.ui
+package stockcharts.simulation
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import org.slf4j.LoggerFactory
-import stockcharts.Config.UI
+import stockcharts.Config.Simulation
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
 
-object UIApp extends App with Routing {
+object SimulationApp extends App with Routing {
 
   val log = LoggerFactory.getLogger(this.getClass)
 
-  implicit val system = ActorSystem("ui-app")
+  implicit val system = ActorSystem("simulation-app")
+  import system.dispatcher
   implicit val materializer = ActorMaterializer()
 
-  val binding = Http().bindAndHandle(route, UI.host, UI.port)
+  val binding = Http().bindAndHandle(route, Simulation.host, Simulation.port)
   binding.onComplete {
     case Success(_) => log.info("Rest api binding has been successfully done")
     case Failure(thr) =>

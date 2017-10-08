@@ -1,0 +1,35 @@
+<configuration>
+    <property name="log_file" value="${APP_LOG:-./logs/simulation.log}"/>
+
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+
+    <conversionRule conversionWord="akkaAwareThread" converterClass="stockcharts.logging.AkkaAwareThreadConverter"/>
+    <conversionRule conversionWord="akkaAwareLogger" converterClass="stockcharts.logging.AkkaAwareLoggerConverter"/>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log_file}</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${log_file}_%d</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date{ISO8601} [%akkaAwareThread] %-5level %akkaAwareLogger{64} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date{ISO8601} [%akkaAwareThread] %-5level %akkaAwareLogger{64} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="warn">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
+    </root>
+
+    <logger name="stockcharts" level="INFO" />
+
+</configuration>
