@@ -13,6 +13,10 @@ val `external-source-extractor` = project.in(file("external-source-extractor"))
   .dependsOn(common)
   .settings(externalSourceExtractorDeps)
 
+val simulation = project.in(file("simulation"))
+  .dependsOn(common)
+  .settings(simulationDeps)
+
 val ui = project.in(file("ui"))
   .dependsOn(common)
   .settings(uiDeps)
