@@ -18,6 +18,8 @@ object Config {
   }
 
   object Stocks {
+    def getById(id: String) = all.find(_.stockId.id == id)
+
     val all = Seq(
       Stock(conf.getConfig("stocks.facebook")),
       Stock(conf.getConfig("stocks.ibm")),

@@ -8,7 +8,7 @@ import stockcharts.Config.Simulation
 
 import scala.util.{Failure, Success}
 
-object SimulationApp extends App with Routing {
+object SimulationApp extends App {
 
   val log = LoggerFactory.getLogger(this.getClass)
 
@@ -16,7 +16,7 @@ object SimulationApp extends App with Routing {
   import system.dispatcher
   implicit val materializer = ActorMaterializer()
 
-  val binding = Http().bindAndHandle(route, Simulation.host, Simulation.port)
+  val binding = Http().bindAndHandle(Routing(SimulationFactory.apply), Simulation.host, Simulation.port)
   binding.onComplete {
     case Success(_) => log.info("Rest api binding has been successfully done")
     case Failure(thr) =>
