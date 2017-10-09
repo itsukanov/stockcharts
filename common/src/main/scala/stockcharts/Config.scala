@@ -18,6 +18,8 @@ object Config {
   }
 
   object Stocks {
+    def getById(id: String) = all.find(_.stockId.id == id)
+
     val all = Seq(
       Stock(conf.getConfig("stocks.facebook")),
       Stock(conf.getConfig("stocks.ibm")),
@@ -35,7 +37,7 @@ object Config {
     val port = conf.getInt("ui.port")
   }
 
-  object Simulation {
+  object SimulationAppConf {
     val host = conf.getString("simulation.host")
     val port = conf.getInt("simulation.port")
   }

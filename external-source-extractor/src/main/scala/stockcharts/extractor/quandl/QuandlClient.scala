@@ -25,7 +25,7 @@ class QuandlClient(baseUrl: String,
   private val httpClient = Http()(system)
 
   private def getDatasetUrl(stockName: String) =
-    s"$baseUrl/$stockName/data.json?api_key=$apiKey"
+    s"$baseUrl/$stockName/data.json?api_key=$apiKey&order=asc"
 
   def getStockPrices(stock: String): Future[List[Price]] =
     httpClient

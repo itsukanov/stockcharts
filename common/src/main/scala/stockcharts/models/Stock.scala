@@ -19,3 +19,10 @@ case class Stock(stockId: StockId, name: String) {
 object Stock {
   def apply(conf: Config): Stock = new Stock(StockId(conf.getString("id")), conf.getString("name"))
 }
+
+case class SimulationConf(simulationId: String,
+                          stock: Stock,
+                          rsiBuy: Double,
+                          rsiSell: Double,
+                          takeProfit: Double,
+                          stopLoss: Double)
