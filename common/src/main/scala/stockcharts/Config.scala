@@ -37,7 +37,7 @@ object Config {
     val port = conf.getInt("ui.port")
   }
 
-  object Simulation {
+  object SimulationAppConf {
     val host = conf.getString("simulation.host")
     val port = conf.getInt("simulation.port")
   }

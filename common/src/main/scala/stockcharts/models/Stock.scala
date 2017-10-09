@@ -20,7 +20,8 @@ object Stock {
   def apply(conf: Config): Stock = new Stock(StockId(conf.getString("id")), conf.getString("name"))
 }
 
-case class SimulationConf(stock: Stock,
+case class SimulationConf(simulationId: String,
+                          stock: Stock,
                           rsiBuy: Double,
                           rsiSell: Double,
                           takeProfit: Double,

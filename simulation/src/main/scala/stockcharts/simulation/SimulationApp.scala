@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import org.slf4j.LoggerFactory
-import stockcharts.Config.Simulation
+import stockcharts.Config.SimulationAppConf
 
 import scala.util.{Failure, Success}
 
@@ -16,7 +16,7 @@ object SimulationApp extends App {
   import system.dispatcher
   implicit val materializer = ActorMaterializer()
 
-  val binding = Http().bindAndHandle(Routing(SimulationFactory.apply), Simulation.host, Simulation.port)
+  val binding = Http().bindAndHandle(Routing(SimulationFactory.simulateTrade), SimulationAppConf.host, SimulationAppConf.port)
   binding.onComplete {
     case Success(_) => log.info("Rest api binding has been successfully done")
     case Failure(thr) =>
