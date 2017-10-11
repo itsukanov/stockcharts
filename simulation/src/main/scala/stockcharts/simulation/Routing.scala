@@ -42,7 +42,9 @@ object Routing {
       case TextMessage.Strict(confAsStr) =>
         tryParseConf(confAsStr) match {
           case Success(conf) =>
-            val simulation = simulationFactory(conf).concat(done).map(TextMessage.apply)
+            val simulation = simulationFactory(conf).take(100) // todo delete 'take'
+              .concat(done)
+              .map(TextMessage.apply)
             log.debug(s"Trade simulation for $conf has been created")
             simulation
 
