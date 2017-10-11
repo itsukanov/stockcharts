@@ -19,7 +19,6 @@ var stock2Id = {
 
 var serverUri = "ws://localhost:8081/simulate";
 var websocket;
-var chartUpdating;
 
 var allDataFromServer = [];
 
@@ -433,7 +432,7 @@ function startChartUpdating() {
     chartUpdating = setInterval(function() {
         do {
             if (allDataFromServer.length > 0) {
-                processWsEvent();
+                processWsEvent(chartUpdating);
             }
         } while ((priceData.length < nbrOfBarsOnChart) && (allDataFromServer.length > 0))
 
@@ -443,7 +442,7 @@ function startChartUpdating() {
     }, showNewBarEveryMs);
 }
 
-function processWsEvent() {
+function processWsEvent(chartUpdating) {
     var wsEvent = allDataFromServer.shift();
     var newData = JSON.parse(wsEvent.data);
     log("Processing ws event:");
