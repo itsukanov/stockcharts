@@ -39,38 +39,49 @@ $(function(){
 
      var isChartWithOldData = false;
      $("#start-btn").click(function(){
-        function getValue(id) {
-          if (id.includes('dropdown')) {
-              return $("#" + id).text().trim();
-          } else {
-              return $("#" + id).val().trim();
-          }
-        }
-
         if (isChartWithOldData) {
           clearAllDataFromServer();
-        }
-        isChartWithOldData = true;
-
-        var simulationConf = {
-            stock: stock2Id[getValue("stock-dropdown")],
-            rsiBuy: parseFloat(getValue("rsiBuy")),
-            rsiSell: parseFloat(getValue("rsiSell")),
-            takeProfit: parseFloat(getValue("takeProfit")),
-            stopLoss: parseFloat(getValue("stopLoss"))
+        } else {
+          isChartWithOldData = true;
         }
 
+        var simulationConf = getSimulationConf();
         if (websocket == undefined) {
             websocket = initWebSocket(serverUri);
+
+            var waitingSocketConnection = setInterval(function () {
+                if (websocket.readyState == websocket.OPEN) {
+                    websocket.send(JSON.stringify(simulationConf));
+                    clearInterval(waitingSocketConnection);
+                }
+            }, 200);
+        } else {
+            websocket.send(JSON.stringify(simulationConf));
         }
 
-        websocket.send(JSON.stringify(simulationConf));
         startChartUpdating();
      });
 
      chart = createChart();
-
 })
+
+function getSimulationConf() {
+    function getValue(id) {
+      if (id.includes('dropdown')) {
+          return $("#" + id).text().trim();
+      } else {
+          return $("#" + id).val().trim();
+      }
+    }
+
+    return {
+        stock: stock2Id[getValue("stock-dropdown")],
+        rsiBuy: parseFloat(getValue("rsiBuy")),
+        rsiSell: parseFloat(getValue("rsiSell")),
+        takeProfit: parseFloat(getValue("takeProfit")),
+        stopLoss: parseFloat(getValue("stopLoss"))
+    }
+}
 
 function createChart() {
         return AmCharts.makeChart("chartdiv", {
