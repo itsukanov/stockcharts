@@ -1,6 +1,6 @@
 var debugEnabled = true;
 
-var nbrOfBarsOnChart = 10;
+var nbrOfBarsOnChart = 91;
 var showNewBarEveryMs = 101;
 var stockName = "Facebook";
 
