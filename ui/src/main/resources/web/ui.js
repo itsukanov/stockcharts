@@ -38,6 +38,7 @@ $(function(){
          $(this).parents('.dropdown').find('.dropdown-toggle').html(selText);
      });
 
+     var isChartWithOldData = false;
      $("#start-btn").click(function(){
         function getValue(id) {
           if (id.includes('dropdown')) {
@@ -47,7 +48,11 @@ $(function(){
           }
         }
 
-//        clearAllDataFromServer();
+        if (isChartWithOldData) {
+          clearAllDataFromServer();
+        }
+        isChartWithOldData = true;
+
         var simulationConf = {
             stock: stock2Id[getValue("stock-dropdown")],
             rsiBuy: parseFloat(getValue("rsiBuy")),
@@ -64,7 +69,12 @@ $(function(){
         startChartUpdating();
      });
 
-     chart = AmCharts.makeChart("chartdiv", {
+     chart = createChart();
+
+})
+
+function createChart() {
+        return AmCharts.makeChart("chartdiv", {
               "type": "stock",
               "theme": "dark",
               "addClassNames": true,
@@ -267,7 +277,7 @@ $(function(){
                 "offsetY": 10
               }
             } );
-})
+        }
 
 var order1 = {
     id: 42,
@@ -360,7 +370,8 @@ function clearAllDataFromServer() {
     stockEvents = [];
     trendLines = [];
 
-    chart.validateData();
+    AmCharts.clear();
+    chart = createChart();
 }
 
 function addOrderEvent(order) {
