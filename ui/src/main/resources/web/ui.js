@@ -45,6 +45,7 @@ $(function(){
         }
 
         var simulationConf = getSimulationConf();
+        saveConfInQParams();
         if (websocket == undefined) {
             websocket = initWebSocket(serverUri);
 
@@ -64,8 +65,21 @@ $(function(){
      chart = createChart();
 })
 
-function getSimulationConf() {
-    function getValue(id) {
+function saveConfInQParams() {
+    function isNotBlank(str) {
+       return !(str == "" || str == null);
+    }
+
+    var newSimulationParams = inputIds.filter(function (id) {
+        return isNotBlank(getValue(id));
+    }).map(function (id) {
+        return id2ParamName[id] + "=" + getValue(id);
+    }).join("&");
+
+    window.history.pushState('page', 'Title', "/simulate?" + newSimulationParams);
+}
+
+function getValue(id) {
       if (id.includes('dropdown')) {
           return $("#" + id).text().trim();
       } else {
@@ -73,6 +87,7 @@ function getSimulationConf() {
       }
     }
 
+function getSimulationConf() {
     return {
         stock: stock2Id[getValue("stock-dropdown")],
         rsiBuy: parseFloat(getValue("rsiBuy")),
