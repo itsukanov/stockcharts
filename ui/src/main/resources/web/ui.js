@@ -12,11 +12,8 @@ var id2ParamName = {
 }
 var inputIds = Object.keys(id2ParamName);
 
-var stock2Id = {
- "Facebook": "FB"
-}
-
 var serverUri = "ws://localhost:8081/simulate";
+var stock2Id = new Map();
 var websocket;
 
 var allDataFromServer = [];
@@ -29,12 +26,8 @@ var stockEvents = [];
 var trendLines = [];
 
 $(function(){
+     initStockList();
      initInputs();
-
-     $(".dropdown-item").click(function(){
-         var selText = $(this).text();
-         $(this).parents('.dropdown').find('.dropdown-toggle').html(selText);
-     });
 
      var isChartWithOldData = false;
      $("#start-btn").click(function(){
@@ -46,6 +39,7 @@ $(function(){
 
         var simulationConf = getSimulationConf();
         saveConfInQParams();
+
         if (websocket == undefined) {
             websocket = initWebSocket(serverUri);
 
@@ -64,6 +58,23 @@ $(function(){
 
      chart = createChart();
 })
+
+function initStockList() {
+    fetch("/stocks").then(function(response) {
+      return response.json();
+    }).then(function(stocks) {
+      var stockList = $("#stock-list");
+      stocks.forEach(function(stock) {
+        stock2Id.set(stock.uiName, stock.stockId);
+        stockList.append('<a class="dropdown-item" href="#">' + stock.uiName + '</a>')
+      });
+
+      $(".dropdown-item").click(function(){
+        var selText = $(this).text();
+        $(this).parents('.dropdown').find('.dropdown-toggle').html(selText);
+      });
+    })
+}
 
 function saveConfInQParams() {
     function isNotBlank(str) {
@@ -89,7 +100,7 @@ function getValue(id) {
 
 function getSimulationConf() {
     return {
-        stock: stock2Id[getValue("stock-dropdown")],
+        stock: stock2Id.get(getValue("stock-dropdown")),
         rsiBuy: parseFloat(getValue("rsiBuy")),
         rsiSell: parseFloat(getValue("rsiSell")),
         takeProfit: parseFloat(getValue("takeProfit")),
@@ -529,6 +540,7 @@ function setInput(qParam, inputId) {
 
   if (inputId.includes('dropdown')) {
     $("#" + inputId).parents('.dropdown').find('.dropdown-toggle').html(getQueryParam(qParam));
+  } else {
+    $("#" + inputId).val(getQueryParam(qParam));
   }
-  $("#" + inputId).val(getQueryParam(qParam));
 }
