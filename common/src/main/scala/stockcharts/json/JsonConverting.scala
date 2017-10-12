@@ -15,7 +15,8 @@ class LocalDateSerializer extends CustomSerializer[LocalDate](format => (
 object JsonConverting {
 
   implicit val formats = org.json4s.DefaultFormats + new LocalDateSerializer
-  private def toJson(a: Any) = compact(render(Extraction.decompose(a)))
+
+  def toJson(a: Any) = compact(render(Extraction.decompose(a)))
 
   val toJsonFlow = Flow.fromFunction(toJson)
 

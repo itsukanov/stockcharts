@@ -2,7 +2,6 @@ var debugEnabled = true;
 
 var nbrOfBarsOnChart = 91;
 var showNewBarEveryMs = 101;
-var stockName = "Facebook";
 
 var id2ParamName = {
     "stock-dropdown": "stock",
@@ -13,11 +12,8 @@ var id2ParamName = {
 }
 var inputIds = Object.keys(id2ParamName);
 
-var stock2Id = {
- "Facebook": "FB"
-}
-
 var serverUri = "ws://localhost:8081/simulate";
+var stock2Id = new Map();
 var websocket;
 
 var allDataFromServer = [];
@@ -30,12 +26,8 @@ var stockEvents = [];
 var trendLines = [];
 
 $(function(){
+     initStockList();
      initInputs();
-
-     $(".dropdown-item").click(function(){
-         var selText = $(this).text();
-         $(this).parents('.dropdown').find('.dropdown-toggle').html(selText);
-     });
 
      var isChartWithOldData = false;
      $("#start-btn").click(function(){
@@ -46,6 +38,8 @@ $(function(){
         }
 
         var simulationConf = getSimulationConf();
+        saveConfInQParams();
+
         if (websocket == undefined) {
             websocket = initWebSocket(serverUri);
 
@@ -65,8 +59,38 @@ $(function(){
      chart = createChart();
 })
 
-function getSimulationConf() {
-    function getValue(id) {
+function initStockList() {
+    fetch("/stocks").then(function(response) {
+      return response.json();
+    }).then(function(stocks) {
+      var stockList = $("#stock-list");
+      stocks.forEach(function(stock) {
+        stock2Id.set(stock.uiName, stock.stockId);
+        stockList.append('<a class="dropdown-item" href="#">' + stock.uiName + '</a>')
+      });
+
+      $(".dropdown-item").click(function(){
+        var selText = $(this).text();
+        $(this).parents('.dropdown').find('.dropdown-toggle').html(selText);
+      });
+    })
+}
+
+function saveConfInQParams() {
+    function isNotBlank(str) {
+       return !(str == "" || str == null);
+    }
+
+    var newSimulationParams = inputIds.filter(function (id) {
+        return isNotBlank(getValue(id));
+    }).map(function (id) {
+        return id2ParamName[id] + "=" + getValue(id);
+    }).join("&");
+
+    window.history.pushState('page', 'Title', "/simulate?" + newSimulationParams);
+}
+
+function getValue(id) {
       if (id.includes('dropdown')) {
           return $("#" + id).text().trim();
       } else {
@@ -74,8 +98,9 @@ function getSimulationConf() {
       }
     }
 
+function getSimulationConf() {
     return {
-        stock: stock2Id[getValue("stock-dropdown")],
+        stock: stock2Id.get(getValue("stock-dropdown")),
         rsiBuy: parseFloat(getValue("rsiBuy")),
         rsiSell: parseFloat(getValue("rsiSell")),
         takeProfit: parseFloat(getValue("takeProfit")),
@@ -91,7 +116,7 @@ function createChart() {
               "glueToTheEnd": true,
 
               "dataSets": [ {
-                "title": stockName,
+                "title": "",
                 "fieldMappings": [ {
                   "fromField": "open",
                   "toField": "open"
@@ -141,7 +166,7 @@ function createChart() {
               "dataDateFormat": "YYYY-MM-DD",
 
               "panels": [ {
-                  "title": "Value",
+                  "title": "Prices",
                   "percentHeight": 70,
                   "recalculateToPercents": "never",
 
@@ -167,6 +192,7 @@ function createChart() {
                   "trendLines": trendLines,
 
                   "stockLegend": {
+                   "valueTextRegular": "Open: [[open]]; High: [[high]]; Low: [[low]]; Close [[close]]",
                     "markerType": "none",
                     "markerSize": 0,
                     "switchable": false
@@ -514,6 +540,7 @@ function setInput(qParam, inputId) {
 
   if (inputId.includes('dropdown')) {
     $("#" + inputId).parents('.dropdown').find('.dropdown-toggle').html(getQueryParam(qParam));
+  } else {
+    $("#" + inputId).val(getQueryParam(qParam));
   }
-  $("#" + inputId).val(getQueryParam(qParam));
 }

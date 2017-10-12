@@ -8,6 +8,7 @@ import akka.stream.scaladsl.{Keep, Source}
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.serialization.{ByteArraySerializer, StringSerializer}
 import org.slf4j.LoggerFactory
+import stockcharts.Config.Stocks
 import stockcharts.models.{Stock, StockId}
 
 import scala.util.{Failure, Success}
@@ -28,7 +29,7 @@ object TestWriterApp extends App {
   val done = Source(1 to 10)
     .map(_.toString)
     .map { elem =>
-      new ProducerRecord[Array[Byte], String](Stock(StockId("FBK"), "Facebook").topic, 0, null, elem)
+      new ProducerRecord[Array[Byte], String](Stocks.all.head.topic, 0, null, elem)
     }
     .toMat(Producer.plainSink(producerSettings))(Keep.right)
     .run()
