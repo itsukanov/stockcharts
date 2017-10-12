@@ -2,7 +2,6 @@ var debugEnabled = true;
 
 var nbrOfBarsOnChart = 91;
 var showNewBarEveryMs = 101;
-var stockName = "Facebook";
 
 var id2ParamName = {
     "stock-dropdown": "stock",
@@ -91,7 +90,7 @@ function createChart() {
               "glueToTheEnd": true,
 
               "dataSets": [ {
-                "title": stockName,
+                "title": "",
                 "fieldMappings": [ {
                   "fromField": "open",
                   "toField": "open"
@@ -141,7 +140,7 @@ function createChart() {
               "dataDateFormat": "YYYY-MM-DD",
 
               "panels": [ {
-                  "title": "Value",
+                  "title": "Prices",
                   "percentHeight": 70,
                   "recalculateToPercents": "never",
 
@@ -167,6 +166,7 @@ function createChart() {
                   "trendLines": trendLines,
 
                   "stockLegend": {
+                   "valueTextRegular": "Open: [[open]]; High: [[high]]; Low: [[low]]; Close [[close]]",
                     "markerType": "none",
                     "markerSize": 0,
                     "switchable": false
