@@ -1,30 +1,24 @@
-var nbrOfBarsTotal = 91;
-var nbrOfBarsOnChart = 90;
+var debugEnabled = true;
 
-var debugEnabled = false;
-
+var nbrOfBarsOnChart = 91;
 var showNewBarEveryMs = 101;
-var sendNewBarEveryMs = 5;
 var stockName = "Facebook";
 
-var baseUrl = "/simulate";
-
-var id2QParamName = {
+var id2ParamName = {
     "stock-dropdown": "stock",
     "rsiBuy": "rsiBuy",
     "rsiSell": "rsiSell",
     "takeProfit": "takeProfit",
     "stopLoss": "stopLoss"
 }
-var inputIds = Object.keys(id2QParamName);
+var inputIds = Object.keys(id2ParamName);
 
-var websocketEchoServerUri = "wss://echo.websocket.org/";
-var websocket = initWebSocket(websocketEchoServerUri);
+var stock2Id = {
+ "Facebook": "FB"
+}
 
-var priceGenerator = makePriceGenerator();
-var dateGenerator = makeDateGenerator();
-var indicatorGenerator = makeIndicatorGenerator();
-var balanceGenerator = makeBalanceGenerator();
+var serverUri = "ws://localhost:8081/simulate";
+var websocket;
 
 var allDataFromServer = [];
 
@@ -32,7 +26,6 @@ var priceData = [];
 var indicatorData = [];
 var balanceData = [];
 var equityData = [];
-
 var stockEvents = [];
 var trendLines = [];
 
@@ -44,29 +37,54 @@ $(function(){
          $(this).parents('.dropdown').find('.dropdown-toggle').html(selText);
      });
 
+     var isChartWithOldData = false;
      $("#start-btn").click(function(){
-        function getValue(id) {
-          if (id.includes('dropdown')) {
-              return $("#" + id).text().trim();
-          } else {
-              return $("#" + id).val().trim();
-          }
+        if (isChartWithOldData) {
+          clearAllDataFromServer();
+        } else {
+          isChartWithOldData = true;
         }
 
-        function isNotBlank(str) {
-          return !(str == "" || str == null);
+        var simulationConf = getSimulationConf();
+        if (websocket == undefined) {
+            websocket = initWebSocket(serverUri);
+
+            var waitingSocketConnection = setInterval(function () {
+                if (websocket.readyState == websocket.OPEN) {
+                    websocket.send(JSON.stringify(simulationConf));
+                    clearInterval(waitingSocketConnection);
+                }
+            }, 200);
+        } else {
+            websocket.send(JSON.stringify(simulationConf));
         }
 
-        var newSimulationUrl = inputIds.filter(function (id) {
-          return isNotBlank(getValue(id));
-        }).map(function (id) {
-          return id2QParamName[id] + "=" + getValue(id);
-        }).join("&");
-
-        window.location.href = baseUrl + "?" + newSimulationUrl;
+        startChartUpdating();
      });
 
-     chart = AmCharts.makeChart( "chartdiv", {
+     chart = createChart();
+})
+
+function getSimulationConf() {
+    function getValue(id) {
+      if (id.includes('dropdown')) {
+          return $("#" + id).text().trim();
+      } else {
+          return $("#" + id).val().trim();
+      }
+    }
+
+    return {
+        stock: stock2Id[getValue("stock-dropdown")],
+        rsiBuy: parseFloat(getValue("rsiBuy")),
+        rsiSell: parseFloat(getValue("rsiSell")),
+        takeProfit: parseFloat(getValue("takeProfit")),
+        stopLoss: parseFloat(getValue("stopLoss"))
+    }
+}
+
+function createChart() {
+        return AmCharts.makeChart("chartdiv", {
               "type": "stock",
               "theme": "dark",
               "addClassNames": true,
@@ -269,7 +287,7 @@ $(function(){
                 "offsetY": 10
               }
             } );
-})
+        }
 
 var order1 = {
     id: 42,
@@ -353,6 +371,19 @@ function closeSellEvent(order) {
       }
 }
 
+function clearAllDataFromServer() {
+    allDataFromServer = [];
+    priceData = [];
+    indicatorData = [];
+    balanceData = [];
+    equityData = [];
+    stockEvents = [];
+    trendLines = [];
+
+    AmCharts.clear();
+    chart = createChart();
+}
+
 function addOrderEvent(order) {
     var event;
     if (order.closeDate) {
@@ -370,7 +401,6 @@ function addOrderEvent(order) {
         }
     }
     stockEvents.push(event);
-    chart.validateData();
 }
 
 var lastOrderLineId = 0;
@@ -393,24 +423,6 @@ function addOrderLine(order) {
         "lineThickness": 2,
         "lineColor": "#e1d165"
       });
-      chart.validateData();
-}
-
-function getDataFromServer() {
-  var newDate = dateGenerator();
-  var newPrice = priceGenerator();
-  newPrice.date = newDate;
-
-  websocket.send(JSON.stringify(newPrice));
-
-  var newIndicatorValue = indicatorGenerator()
-  newIndicatorValue.date = newDate;
-
-  websocket.send(JSON.stringify(newIndicatorValue));
-
-  var newBalance = balanceGenerator();
-  newBalance.date = newDate;
-  websocket.send(JSON.stringify(newBalance));
 }
 
 function initWebSocket(wsUri) {
@@ -427,25 +439,25 @@ function saveData(wsEvent) {
     allDataFromServer.push(wsEvent)
 }
 
-var chartUpdating = setInterval(function() {
-    if (priceData.length > nbrOfBarsTotal) {
-        websocket.close(); // todo remove after real service will be ready. Now it's stopping data generation
-    }
+function startChartUpdating() {
+    chartUpdating = setInterval(function() {
+        do {
+            if (allDataFromServer.length > 0) {
+                processWsEvent(chartUpdating);
+            }
+        } while ((priceData.length < nbrOfBarsOnChart) && (allDataFromServer.length > 0))
 
-    do {
-        if (allDataFromServer.length > 0) {
-            processWsEvent();
+        if (priceData.length >= nbrOfBarsOnChart) {
+            chart.validateData(); //call to redraw the chart with new data
         }
-    } while ((priceData.length < nbrOfBarsOnChart) && (allDataFromServer.length > 0))
+    }, showNewBarEveryMs);
+}
 
-    if (priceData.length >= nbrOfBarsOnChart) {
-        chart.validateData(); //call to redraw the chart with new data
-    }
-}, showNewBarEveryMs);
-
-function processWsEvent() {
+function processWsEvent(chartUpdating) {
     var wsEvent = allDataFromServer.shift();
     var newData = JSON.parse(wsEvent.data);
+    log("Processing ws event:");
+    log(newData);
 
     switch (newData.type) {
       case 'Price':
@@ -463,20 +475,14 @@ function processWsEvent() {
 
         equityData.push(copy);
         break;
+      case 'Simulation done':
+        clearInterval(chartUpdating);
+        break;
     }
 }
 
-var interval;
-var sentCount = 0;
 function onConnect(wsEvent) {
   log("Server connection successful. Listening for data now.");
-  interval = setInterval(function () {
-    if (sentCount > nbrOfBarsTotal) {
-        clearInterval(interval);
-    }
-    sentCount = sentCount + 1;
-    getDataFromServer();
-  }, sendNewBarEveryMs);
 }
 
 function onError(wsEvent) {
@@ -485,8 +491,7 @@ function onError(wsEvent) {
 
 function onClose(wsEvent) {
   log("Server connection closed");
-  clearInterval(interval);
-  clearInterval(chartUpdating);
+  websocket = null;
 }
 
 function log(msg) {
@@ -497,94 +502,18 @@ function log(msg) {
 
 function initInputs() {
   inputIds.map(function (id) {
-    setInput(id2QParamName[id], id);
+    setInput(id2ParamName[id], id);
   });
 }
 
 function setInput(qParam, inputId) {
+  function getQueryParam(param) {
+    var url = new URL(window.location.href);
+    return url.searchParams.get(param);
+  }
+
   if (inputId.includes('dropdown')) {
     $("#" + inputId).parents('.dropdown').find('.dropdown-toggle').html(getQueryParam(qParam));
   }
   $("#" + inputId).val(getQueryParam(qParam));
-}
-
-function getQueryParam(param) {
-  var url = new URL(window.location.href);
-  return url.searchParams.get(param);
-}
-
-function makeDateGenerator() {
-    var startDay = Date.now();
-    var oneDay = 24*60*60*1000;
-
-    return function () {
-       var res = (new Date(startDay + oneDay)).toISOString().slice(0, 10);
-       startDay = startDay + oneDay;
-       return res;
-    }
-}
-
-
-function makeBalanceGenerator() {
-     var lastBalance = 400;
-     var lastEquity = 400;
-
-     return function () {
-          var newDifBalance = Math.round(Math.random() * 32 - 16);
-          var newDifEquity = Math.round(Math.random() * 32 - 16);
-
-          var newBalance = lastBalance + newDifBalance;
-          var newEquity = lastEquity + newDifEquity;
-
-          lastBalance = newBalance;
-          lastEquity = newEquity;
-
-          return {
-            type: "Balance",
-            balance: newBalance,
-            equity: newEquity
-          };
-     }
-}
-
-function makeIndicatorGenerator() {
-     var lastValue = 42;
-
-     return function () {
-          var newDif = Math.round(Math.random() * 16 - 8);
-          var newValue = lastValue + newDif;
-
-          newValue = newValue > 100 ? 100 : newValue;
-          newValue = newValue < 0 ? 0 : newValue;
-
-          lastValue = newValue;
-
-          return {
-            type: "IndicatorValue",
-            indicatorValue: newValue
-          };
-     }
-}
-
-function makePriceGenerator() {
-     var lastClose = 42;
-
-     return function () {
-          var newDif = Math.round(Math.random() * 8 - 4);
-
-          var newClose = lastClose + newDif;
-          var newHigh = Math.max(newClose, lastClose) + (Math.round(Math.random() * 2) + 1);
-          var newLow = Math.min(newClose, lastClose) - (Math.round(Math.random() * 2) + 1);
-
-          var res = {
-              type: "Price",
-              open: lastClose,
-              close: newClose,
-              high: newHigh,
-              low: newLow
-          }
-          lastClose = newClose;
-
-          return res;
-     }
 }
