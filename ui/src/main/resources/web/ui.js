@@ -1,4 +1,5 @@
-var debugEnabled = true;
+var logSystemEventsEnabled = true;
+var logDataEnabled = false;
 
 var nbrOfBarsOnChart = 91;
 var showNewBarEveryMs = 101;
@@ -25,47 +26,57 @@ var equityData = [];
 var stockEvents = [];
 var trendLines = [];
 
-var isSimulationInProgress = false;
-
 $(function(){
      initStockList();
      initInputs();
-
-     var isChartWithOldData = false;
-     $("#start-btn").click(function(){
-        if (isSimulationInProgress) {
-            return;
-        } else {
-            isSimulationInProgress = true;
-        }
-
-        if (isChartWithOldData) {
-          clearAllDataFromServer();
-        } else {
-          isChartWithOldData = true;
-        }
-
-        var simulationConf = getSimulationConf();
-        saveConfInQParams();
-
-        if (websocket == undefined) {
-            websocket = initWebSocket(serverUri);
-
-            var waitingSocketConnection = setInterval(function () {
-                if (websocket.readyState == websocket.OPEN) {
-                    websocket.send(JSON.stringify(simulationConf));
-                    clearInterval(waitingSocketConnection);
-                }
-            }, 200);
-        } else {
-            websocket.send(JSON.stringify(simulationConf));
-        }
-
-        startChartUpdating();
-     });
-
+     $("#start-btn").click(startBtnHandler);
      chart = createChart();
 })
+
+function initSkipAnimationBtn() {
+    $("#start-btn").text("Skip animation").removeClass("btn-primary").addClass("btn-warning");
+    $("#start-btn").off().click(function () { skipAnimation = true});
+}
+
+function initStartBtn() {
+    $("#start-btn").text("Start simulation").removeClass("btn-warning").addClass("btn-primary");
+    $("#start-btn").off().click(startBtnHandler);
+}
+
+var skipAnimation = false;
+var isChartWithOldData = false;
+function startBtnHandler() {
+    initSkipAnimationBtn();
+
+    if (isChartWithOldData) {
+      clearAllDataFromServer();
+    } else {
+      isChartWithOldData = true;
+    }
+
+    function sendSimulationConf() {
+        var simulationConf = getSimulationConf();
+        websocket.send(JSON.stringify(simulationConf));
+        log("Request to start simulation has been sent");
+    }
+
+    saveConfInQParams();
+
+    if (websocket == undefined) {
+        websocket = initWebSocket(serverUri);
+
+        var waitingSocketConnection = setInterval(function () {
+            if (websocket.readyState == websocket.OPEN) {
+                sendSimulationConf();
+                clearInterval(waitingSocketConnection);
+            }
+        }, 200);
+    } else {
+        sendSimulationConf();
+    }
+
+    startChartUpdating();
+}
 
 function initStockList() {
     fetch("/stocks").then(function(response) {
@@ -469,17 +480,17 @@ function initWebSocket(wsUri) {
 }
 
 function saveData(wsEvent) {
-    log("Received: " + wsEvent.data);
-    allDataFromServer.push(wsEvent)
+    logData("Received data from server:\n" + wsEvent.data);
+    allDataFromServer.push(wsEvent.data)
 }
 
 function startChartUpdating() {
-    chartUpdating = setInterval(function() {
+    var chartUpdating = setInterval(function() {
         do {
             if (allDataFromServer.length > 0) {
                 processWsEvent(chartUpdating);
             }
-        } while ((priceData.length < nbrOfBarsOnChart) && (allDataFromServer.length > 0))
+        } while ((priceData.length < nbrOfBarsOnChart || skipAnimation) && allDataFromServer.length > 0)
 
         if (priceData.length >= nbrOfBarsOnChart) {
             chart.validateData(); //call to redraw the chart with new data
@@ -489,10 +500,9 @@ function startChartUpdating() {
 
 function processWsEvent(chartUpdating) {
     var wsEvent = allDataFromServer.shift();
-    var newData = JSON.parse(wsEvent.data);
-    log("Processing ws event:");
-    log(newData);
+    logData("Processing ws event:\n" + wsEvent);
 
+    var newData = JSON.parse(wsEvent);
     switch (newData.type) {
       case 'Price':
         priceData.push(newData);
@@ -511,7 +521,9 @@ function processWsEvent(chartUpdating) {
         break;
       case 'Simulation done':
         clearInterval(chartUpdating);
-        isSimulationInProgress = false;
+        log("Simulation done. Chart updating stopped");
+        initStartBtn();
+        skipAnimation = false;
         break;
     }
 }
@@ -530,8 +542,14 @@ function onClose(wsEvent) {
 }
 
 function log(msg) {
-  if (debugEnabled) {
+  if (logSystemEventsEnabled) {
     console.log(msg);
+  }
+}
+
+function logData(data) {
+  if (logDataEnabled) {
+    console.log(data);
   }
 }
 
