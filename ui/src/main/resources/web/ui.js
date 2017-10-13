@@ -25,12 +25,20 @@ var equityData = [];
 var stockEvents = [];
 var trendLines = [];
 
+var isSimulationInProgress = false;
+
 $(function(){
      initStockList();
      initInputs();
 
      var isChartWithOldData = false;
      $("#start-btn").click(function(){
+        if (isSimulationInProgress) {
+            return;
+        } else {
+            isSimulationInProgress = true;
+        }
+
         if (isChartWithOldData) {
           clearAllDataFromServer();
         } else {
@@ -503,6 +511,7 @@ function processWsEvent(chartUpdating) {
         break;
       case 'Simulation done':
         clearInterval(chartUpdating);
+        isSimulationInProgress = false;
         break;
     }
 }
