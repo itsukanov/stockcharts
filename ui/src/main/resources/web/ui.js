@@ -133,6 +133,10 @@ function createChart() {
               "theme": "dark",
               "addClassNames": true,
               "glueToTheEnd": true,
+              "listeners": [{
+                "event": "rendered",
+                "method": function() { chartWasRendered = true; }
+              }],
 
               "dataSets": [ {
                 "title": "",
@@ -427,6 +431,7 @@ function clearAllDataFromServer() {
 
     AmCharts.clear();
     chart = createChart();
+    chartWasRendered = false;
 }
 
 function addOrderEvent(order) {
@@ -484,13 +489,14 @@ function saveData(wsEvent) {
     allDataFromServer.push(wsEvent.data)
 }
 
+var chartWasRendered = false;
 function startChartUpdating() {
     var chartUpdating = setInterval(function() {
         do {
             if (allDataFromServer.length > 0) {
                 processWsEvent(chartUpdating);
             }
-        } while ((priceData.length < nbrOfBarsOnChart || skipAnimation) && allDataFromServer.length > 0)
+        } while ((priceData.length < nbrOfBarsOnChart || (skipAnimation && chartWasRendered)) && allDataFromServer.length > 0)
 
         if (priceData.length >= nbrOfBarsOnChart) {
             chart.validateData(); //call to redraw the chart with new data
