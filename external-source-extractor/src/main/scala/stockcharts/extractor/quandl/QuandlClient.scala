@@ -47,7 +47,7 @@ class QuandlClient(baseUrl: String,
     close = row(closeInx).toDouble
   )
 
-  private def parsePrices(json: String) =
+  private def parsePrices(json: String): List[Price] =
     parse(json)
       .\("dataset_data")
       .extract[QuandlPlainResponse]

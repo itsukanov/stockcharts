@@ -11,6 +11,7 @@ import stockcharts.Config.Stocks
 import stockcharts.json.JsonConverting
 import stockcharts.models.SimulationConf
 
+import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 object Routing {
@@ -35,16 +36,22 @@ object Routing {
   }
 
   private case class SystemMessage(`type`: String)
-  private val done = Source.single(SystemMessage("Simulation done")).via(JsonConverting.toJsonFlow)
+  private val done = JsonConverting.toJson(SystemMessage("Simulation done"))
 
   def wsCommandHandler(simulationFactory: SimulationConf => Source[String, _]) =
     Flow[Message].flatMapConcat {
       case TextMessage.Strict(confAsStr) =>
         tryParseConf(confAsStr) match {
           case Success(conf) =>
-            val simulation = simulationFactory(conf).take(100) // todo delete 'take'
-              .concat(done)
-              .map(TextMessage.apply)
+            val simulation = simulationFactory(conf)
+              .idleTimeout(5 seconds)
+              .recover {
+                case ex: scala.concurrent.TimeoutException => done
+                case thr =>
+                  log.error("Error during simulation", thr)
+                  throw thr
+              }.map(TextMessage.apply)
+
             log.debug(s"Trade simulation for $conf has been created")
             simulation
 
