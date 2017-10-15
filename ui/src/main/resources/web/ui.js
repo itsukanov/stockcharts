@@ -47,6 +47,7 @@ var skipAnimation = false;
 var isChartWithOldData = false;
 function startBtnHandler() {
     initSkipAnimationBtn();
+    startProgressBarUpdating();
 
     if (isChartWithOldData) {
       clearAllDataFromServer();
@@ -125,6 +126,24 @@ function getSimulationConf() {
         takeProfit: parseFloat(getValue("takeProfit")),
         stopLoss: parseFloat(getValue("stopLoss"))
     }
+}
+
+var progressBarUpdating;
+function startProgressBarUpdating() {
+    $(".progress-bar").show();
+
+    progressBarUpdating = setInterval(function () {
+        if (receivedFromServerCount > 0) {
+            var percentDone = (priceData.length / receivedFromServerCount * 100).toFixed(2);
+            var percents = percentDone + "%";
+            $(".progress-bar").css("width", percents).text(percents);
+        }
+    }, 250);
+}
+
+function stopProgressBarUpdating() {
+    clearInterval(progressBarUpdating);
+    $(".progress-bar").hide().css("width", "100%").text("Loading..");
 }
 
 function createChart() {
@@ -432,6 +451,7 @@ function clearAllDataFromServer() {
     AmCharts.clear();
     chart = createChart();
     chartWasRendered = false;
+    receivedFromServerCount = 0;
 }
 
 function addOrderEvent(order) {
@@ -484,9 +504,11 @@ function initWebSocket(wsUri) {
   return ws;
 }
 
+var receivedFromServerCount = 0;
 function saveData(wsEvent) {
     logData("Received data from server:\n" + wsEvent.data);
-    allDataFromServer.push(wsEvent.data)
+    allDataFromServer.push(wsEvent.data);
+    receivedFromServerCount = receivedFromServerCount + 1;
 }
 
 var chartWasRendered = false;
@@ -527,6 +549,7 @@ function processWsEvent(chartUpdating) {
         break;
       case 'Simulation done':
         clearInterval(chartUpdating);
+        stopProgressBarUpdating();
         log("Simulation done. Chart updating stopped");
         initStartBtn();
         skipAnimation = false;
