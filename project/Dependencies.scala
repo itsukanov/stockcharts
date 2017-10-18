@@ -30,7 +30,9 @@ object Dependencies {
   )
 
   val simulationDeps = libraryDependencies ++= Seq(
-    akkaHttp
+    "eu.verdelhan" % "ta4j" % "0.9",
+    akkaHttp,
+    "org.scalatest" % "scalatest_2.12" % "3.0.4" % "test"
   )
 
   val kafkaDeps = libraryDependencies ++= Seq(

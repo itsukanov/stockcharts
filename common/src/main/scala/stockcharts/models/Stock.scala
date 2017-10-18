@@ -4,12 +4,13 @@ import java.time.LocalDate
 
 import com.typesafe.config.Config
 
-case class Price(`type`: String = "Price", // todo delete this field
-                  date: LocalDate,
+case class Price(date: LocalDate,
                  open: Double,
                  high: Double,
                  low: Double,
-                 close: Double)
+                 close: Double,
+                 `type`: String = "Price" // todo delete this field
+)
 
 case class StockId(id: String) extends AnyVal
 
