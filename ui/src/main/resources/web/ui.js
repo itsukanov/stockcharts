@@ -2,7 +2,7 @@ var logSystemEventsEnabled = true;
 var logDataEnabled = false;
 
 var nbrOfBarsOnChart = 91;
-var showNewBarEveryMs = 101;
+var showNewBarEveryMs = 250;
 
 var id2ParamName = {
     "stock-dropdown": "stock",
