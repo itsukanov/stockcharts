@@ -2,12 +2,6 @@ package stockcharts.enrichers.tradesignals
 
 import akka.actor.{Actor, Props}
 
-trait TradeSignal
-object TradeSignal {
-  case object OpenBuy extends TradeSignal
-  case object OpenSell extends TradeSignal
-}
-
 class OverBoughtSoldStrategy[T: Numeric](overBoughtLevel: T, overSoldLevel: T) extends Actor {
   val num = implicitly[Numeric[T]]
   require(num.gt(overBoughtLevel, overSoldLevel))
@@ -41,10 +35,6 @@ class OverBoughtSoldStrategy[T: Numeric](overBoughtLevel: T, overSoldLevel: T) e
       sender() ! Option.empty[TradeSignal]
   }
 
-}
-
-trait TradeInSignalsStrategy {
-  def props: Props
 }
 
 object OverBoughtSoldStrategy {
