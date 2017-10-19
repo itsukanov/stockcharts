@@ -1,7 +1,6 @@
 package stockcharts.enrichers.tradesignals
 
 import akka.stream.scaladsl.Source
-import akka.util.Timeout
 import stockcharts.enrichers.{NumericStreamsSupport, StockchartsTest}
 
 import scala.concurrent.Await
@@ -9,8 +8,6 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 
 class TradeSignalsStrategyTest extends StockchartsTest {
-
-  implicit val to = Timeout(3 seconds)
 
   "OverBoughtSoldStrategy" should "give right trade signals" in {
     import NumericStreamsSupport._

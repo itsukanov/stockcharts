@@ -10,7 +10,8 @@ object NumericStreamsSupport {
 
   implicit class NumericStream[Mat, T: Numeric](values: Source[T, Mat]) {
 
-    def calculateTradeSignals(strategy: TradeInSignalsStrategy)(implicit arf: ActorRefFactory, to: Timeout): Source[Option[TradeSignal], Mat] = {
+    def calculateTradeSignals(strategy: TradeInSignalsStrategy)
+                             (implicit arf: ActorRefFactory, to: Timeout): Source[Option[TradeSignal], Mat] = {
       val value2TradeSignal = arf.actorOf(strategy.props)
       import arf.dispatcher
 
