@@ -2,26 +2,16 @@ package stockcharts.enrichers.indicators
 
 import java.time.LocalDate
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
+import stockcharts.enrichers.PriceStreamsSupport._
+import stockcharts.enrichers.{PriceStreamsSupport, StockchartsTest}
 import stockcharts.models.Price
-import stockcharts.enrichers.indicators.PriceStreamsSupport._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-class IndicatorsTest extends FlatSpec with Matchers with BeforeAndAfterAll {
-
-  implicit val as = ActorSystem("as-for-tests")
-  implicit val materializer = ActorMaterializer()
-
-  override def afterAll() = {
-    as.terminate()
-    materializer.shutdown()
-  }
+class IndicatorsTest extends StockchartsTest {
 
   val startTime = LocalDate.now()
 
