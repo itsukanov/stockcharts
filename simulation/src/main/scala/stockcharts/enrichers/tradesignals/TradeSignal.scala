@@ -2,7 +2,7 @@ package stockcharts.enrichers.tradesignals
 
 import akka.actor.Props
 
-trait TradeSignal
+sealed trait TradeSignal
 object TradeSignal {
   case object OpenBuy extends TradeSignal
   case object OpenSell extends TradeSignal
