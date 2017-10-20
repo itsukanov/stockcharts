@@ -18,7 +18,7 @@ object SimulationSupport {
     val accManager = arf.actorOf(accountManagerFactory.props)
 
     ticks
-      .mapAsync(1)(value => accManager ? value)
+      .mapAsync(1)(tick => accManager ? tick)
       .map(_.asInstanceOf[TickOut])
       .watchTermination() { case (mat, futureDone) =>
         futureDone.onComplete(_ => accManager ! PoisonPill)

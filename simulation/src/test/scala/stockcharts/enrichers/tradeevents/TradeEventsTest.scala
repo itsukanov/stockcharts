@@ -33,8 +33,8 @@ class TradeEventsTest extends StockchartsTest {
     val lotSize = 1
     val accManagerFactory = AccountManager(initBalance, constantSizeLotChooser(lotSize))
 
-    val calculatedEvents = Await.result(calculateAccountChanges(Source(ticks), accManagerFactory)
-      .runFold(List.empty[TickOut]){ case (list, v) => list :+ v }, Duration.Inf)
+    val calculatedEvents = Await.result(
+      calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
       .map(_.events)
 
     val orderIdGen = makeIdGen()

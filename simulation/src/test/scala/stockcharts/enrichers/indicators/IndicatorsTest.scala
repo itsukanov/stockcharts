@@ -21,7 +21,7 @@ class IndicatorsTest extends StockchartsTest {
 
     val smaCalculating = Source(prices)
       .calculate(SMAIndicator(smaPeriod))
-      .runFold(List.empty[Double]) { case (list, v) => list :+ v }
+      .toList
 
     val sma = Await.result(smaCalculating, 3 seconds)
 
