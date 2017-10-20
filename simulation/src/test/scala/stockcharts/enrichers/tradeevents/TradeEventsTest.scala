@@ -19,20 +19,20 @@ class TradeEventsTest extends StockchartsTest {
     }
   }
 
+  val ticks = List(
+    TickIn(priceGen(), None),
+    TickIn(priceGen(), Some(TradeSignal.OpenBuy)),
+    TickIn(priceGen(), None),
+    TickIn(priceGen(), Some(TradeSignal.OpenSell)),
+    TickIn(priceGen(), None),
+    TickIn(priceGen(), None)
+  )
+
+  val initBalance = 100
+  val lotSize = 1
+  val accManagerFactory = AccountManager(initBalance, constantSizeLotChooser(lotSize))
+
   "AccountManager" should "open positions according to trade signals" in {
-    val ticks = List(
-      TickIn(priceGen(), None),
-      TickIn(priceGen(), Some(TradeSignal.OpenBuy)),
-      TickIn(priceGen(), None),
-      TickIn(priceGen(), Some(TradeSignal.OpenSell)),
-      TickIn(priceGen(), None),
-      TickIn(priceGen(), None)
-    )
-
-    val initBalance = 100
-    val lotSize = 1
-    val accManagerFactory = AccountManager(initBalance, constantSizeLotChooser(lotSize))
-
     val calculatedEvents = Await.result(
       calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
       .map(_.events)
@@ -47,6 +47,22 @@ class TradeEventsTest extends StockchartsTest {
     }
 
     calculatedEvents shouldBe rightEvents
+  }
+
+  it should "decrease balance after opening orders" in {
+    val calculatedBalances = Await.result(
+      calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
+      .map(_.account.balance)
+
+    var latestBalance = initBalance.toDouble
+    val rightBalances = ticks.map {
+      case TickIn(price, None) => latestBalance
+      case TickIn(price, Some(_)) =>
+        latestBalance = latestBalance - (price.close * lotSize)
+        latestBalance
+    }
+
+    calculatedBalances shouldBe rightBalances
   }
 
 }
