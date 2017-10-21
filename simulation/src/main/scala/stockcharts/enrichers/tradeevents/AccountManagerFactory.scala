@@ -10,14 +10,14 @@ trait AccountManagerFactory {
 
 object AccountManager {
   def apply(initialBalance: Double,
-            lotSizeChooser: (Price, TradeSignal, Set[Order]) => Int) = new AccountManagerFactory {
+            lotSizeChooser: (Price, TradeSignal, List[Order]) => Int) = new AccountManagerFactory {
 
     override def props: Props = Props(new AccountManager(initialBalance, lotSizeChooser))
   }
 }
 
 class AccountManager(initialBalance: Double,
-                     lotSizeChooser: (Price, TradeSignal, Set[Order]) => Int) extends Actor {
+                     lotSizeChooser: (Price, TradeSignal, List[Order]) => Int) extends Actor {
 
   var lastAcc = Account(initialBalance, equity = 0)
   var openOrders = List.empty[Order]
@@ -30,13 +30,13 @@ class AccountManager(initialBalance: Double,
 
   override def receive: Receive = {
     case TickIn(currentPrice, signalOption) =>
-      val newClosed = Set.empty[Order]
+      val newClosed = List.empty[Order]
       val newOpened = signalOption match {
         case None => Nil
         case Some(TradeSignal.OpenBuy) =>
-          Set(Order(orderId, currentPrice, OrderType.Buy, lotSizeChooser(currentPrice, TradeSignal.OpenBuy, openOrders.toSet)))
+          List(Order(orderId, currentPrice, OrderType.Buy, lotSizeChooser(currentPrice, TradeSignal.OpenBuy, openOrders)))
         case Some(TradeSignal.OpenSell) =>
-          Set(Order(orderId, currentPrice, OrderType.Sell, lotSizeChooser(currentPrice, TradeSignal.OpenSell, openOrders.toSet)))
+          List(Order(orderId, currentPrice, OrderType.Sell, lotSizeChooser(currentPrice, TradeSignal.OpenSell, openOrders)))
       }
 
       val changeFromClosed = newClosed.map { order =>
@@ -64,7 +64,7 @@ class AccountManager(initialBalance: Double,
       }.sum.toDouble + newBalance
 
       lastAcc = lastAcc.copy(balance = newBalance, equity = newEquity)
-      val tradeEvents: Set[TradeEvent] = newClosed.map(TradeEvent.OrderClosed) ++ newOpened.map(TradeEvent.OrderOpened)
+      val tradeEvents = newClosed.map(TradeEvent.OrderClosed) ++ newOpened.map(TradeEvent.OrderOpened)
 
       sender() ! TickOut(lastAcc, tradeEvents)
   }

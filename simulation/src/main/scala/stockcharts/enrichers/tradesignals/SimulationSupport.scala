@@ -9,7 +9,7 @@ import stockcharts.models.Price
 
 object SimulationSupport {
 
-  def constantSizeLotChooser(lotSize: Int = 1) = (price: Price, signal: TradeSignal, openOrders: Set[Order]) => lotSize
+  def constantSizeLotChooser(lotSize: Int = 1) = (price: Price, signal: TradeSignal, openOrders: List[Order]) => lotSize
 
   def calculateAccountChanges[Mat](ticks: Source[TickIn, Mat],
                                    accountManagerFactory: AccountManagerFactory)

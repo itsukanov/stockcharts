@@ -36,12 +36,12 @@ class TradeEventsTest extends StockchartsTest {
       .map(_.events)
 
     val orderIdGen = makeIdGen()
-    val rightEvents: List[Set[TradeEvent]] = ticks.map {
-      case TickIn(price, None) => Set.empty[TradeEvent]
+    val rightEvents: List[List[TradeEvent]] = ticks.map {
+      case TickIn(price, None) => List.empty[TradeEvent]
       case TickIn(price, Some(TradeSignal.OpenBuy)) =>
-        Set(TradeEvent.OrderOpened(Order(orderIdGen(), price, OrderType.Buy, lotSize))): Set[TradeEvent]
+        List(TradeEvent.OrderOpened(Order(orderIdGen(), price, OrderType.Buy, lotSize)))
       case TickIn(price, Some(TradeSignal.OpenSell)) =>
-        Set(TradeEvent.OrderOpened(Order(orderIdGen(), price, OrderType.Sell, lotSize))): Set[TradeEvent]
+        List(TradeEvent.OrderOpened(Order(orderIdGen(), price, OrderType.Sell, lotSize)))
     }
 
     calculatedEvents shouldBe rightEvents
