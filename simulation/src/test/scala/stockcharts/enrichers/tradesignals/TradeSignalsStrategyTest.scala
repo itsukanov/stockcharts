@@ -26,7 +26,7 @@ class TradeSignalsStrategyTest extends StockchartsTest {
 
     val signalsCalculating = Source(values)
       .calculateTradeSignals(OverBoughtSoldStrategy(overBoughtLevel, overSoldLevel))
-        .runFold(List.empty[Option[TradeSignal]]){ case (list, signal) => list :+ signal }
+      .toList
 
     val signals = Await.result(signalsCalculating, 3 seconds)
     signals should contain theSameElementsAs rightSignals

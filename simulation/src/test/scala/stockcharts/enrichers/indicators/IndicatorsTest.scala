@@ -1,10 +1,7 @@
 package stockcharts.enrichers.indicators
 
-import java.time.LocalDate
-
 import akka.stream.scaladsl.Source
-import stockcharts.enrichers.PriceStreamsSupport._
-import stockcharts.enrichers.{PriceStreamsSupport, StockchartsTest}
+import stockcharts.enrichers.StockchartsTest
 import stockcharts.models.Price
 
 import scala.concurrent.Await
@@ -12,11 +9,10 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 
 class IndicatorsTest extends StockchartsTest {
-
-  val startTime = LocalDate.now()
+  import stockcharts.enrichers.PriceStreamsSupport._
 
   "Indicator calculations" should "work properly" in {
-    val prices = (1 to 10).map(i => Price(startTime.plusDays(i), 0, 0, 0, close = i))
+    val prices = (1 to 10).map(i => Price(today.plusDays(i), 0, 0, 0, close = i))
     val smaPeriod = 2
 
     val closePrices = prices.map(_.close)
@@ -25,7 +21,7 @@ class IndicatorsTest extends StockchartsTest {
 
     val smaCalculating = Source(prices)
       .calculate(SMAIndicator(smaPeriod))
-      .runFold(List.empty[Double]) { case (list, v) => list :+ v }
+      .toList
 
     val sma = Await.result(smaCalculating, 3 seconds)
 
