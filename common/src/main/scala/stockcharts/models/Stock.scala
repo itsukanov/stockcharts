@@ -4,11 +4,19 @@ import java.time.LocalDate
 
 import com.typesafe.config.Config
 
+case class Money(cents: Long) {
+  def + (that: Money) = Money(cents + that.cents)
+}
+
+object Money {
+  val zero = Money(0)
+}
+
 case class Price(date: LocalDate,
-                 open: Double,
-                 high: Double,
-                 low: Double,
-                 close: Double,
+                 open: Money,
+                 high: Money,
+                 low: Money,
+                 close: Money,
                  `type`: String = "Price" // todo delete this field
 )
 
@@ -26,5 +34,5 @@ case class SimulationConf(simulationId: String,
                           stock: Stock,
                           rsiBuy: Double,
                           rsiSell: Double,
-                          takeProfit: Double,
-                          stopLoss: Double)
+                          takeProfit: Money,
+                          stopLoss: Money)

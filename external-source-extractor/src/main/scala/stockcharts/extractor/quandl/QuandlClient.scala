@@ -9,9 +9,10 @@ import akka.stream.ActorMaterializer
 import org.json4s._
 import org.json4s.native.JsonMethods._
 import stockcharts.common.AkkaHttp
-import stockcharts.models.Price
+import stockcharts.models.{Money, Price}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.language.postfixOps
 
 case class QuandlPlainResponse(data: List[List[String]])
 
@@ -41,10 +42,10 @@ class QuandlClient(baseUrl: String,
 
   private def row2Price(row: List[String]) = Price(
     date = LocalDate.parse(row(dateInx)),
-    open = row(openInx).toDouble,
-    high = row(highInx).toDouble,
-    low = row(lowInx).toDouble,
-    close = row(closeInx).toDouble
+    open = Money(row(openInx).toDouble * 100 toLong),
+    high = Money(row(highInx).toDouble * 100 toLong),
+    low = Money(row(lowInx).toDouble * 100 toLong),
+    close = Money(row(closeInx).toDouble * 100 toLong)
   )
 
   private def parsePrices(json: String): List[Price] =

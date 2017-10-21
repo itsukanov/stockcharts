@@ -9,9 +9,10 @@ import org.json4s.native.JsonMethods._
 import org.slf4j.LoggerFactory
 import stockcharts.Config.Stocks
 import stockcharts.json.JsonConverting
-import stockcharts.models.SimulationConf
+import stockcharts.models.{Money, SimulationConf}
 
 import scala.concurrent.duration._
+import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
 object Routing {
@@ -31,7 +32,8 @@ object Routing {
       val stock = Stocks.getById(request.stock).getOrElse(throw new IllegalArgumentException("invalid stockId"))
 
       SimulationConf(
-        simulationId = UUID.randomUUID().toString, stock, request.rsiBuy, request.rsiSell, request.takeProfit, request.stopLoss)
+        simulationId = UUID.randomUUID().toString, stock, request.rsiBuy, request.rsiSell,
+        takeProfit = Money(request.takeProfit * 100 toLong), stopLoss = Money(request.stopLoss * 100 toLong))
     }
   }
 

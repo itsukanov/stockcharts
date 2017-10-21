@@ -4,7 +4,7 @@ import akka.stream.scaladsl.Source
 import stockcharts.enrichers.StockchartsTest
 import stockcharts.enrichers.tradesignals.SimulationSupport._
 import stockcharts.enrichers.tradesignals.TradeSignal
-import stockcharts.models.Price
+import stockcharts.models.{Money, Price}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -12,9 +12,9 @@ import scala.concurrent.duration.Duration
 class TradeEventsTest extends StockchartsTest {
 
   var count = 0
-  def price(close: Double) = {
+  def price(close: Long) = {
     count += 1
-    Price(today.plusDays(count), 0, 0, 0, close)
+    Price(today.plusDays(count), Money.zero, Money.zero, Money.zero, Money(close))
   }
 
   val initBalance = 100
