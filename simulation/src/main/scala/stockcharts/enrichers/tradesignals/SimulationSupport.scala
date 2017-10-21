@@ -4,12 +4,12 @@ import akka.actor.{ActorRefFactory, PoisonPill}
 import akka.pattern.ask
 import akka.stream.scaladsl.Source
 import akka.util.Timeout
-import stockcharts.enrichers.tradeevents.{AccountManagerFactory, Order, TickIn, TickOut}
+import stockcharts.enrichers.tradeevents.{AccountManagerFactory, TickIn, TickOut}
 import stockcharts.models.Price
 
 object SimulationSupport {
 
-  def constantSizeLotChooser(lotSize: Int = 1) = (price: Price, signal: TradeSignal, openOrders: List[Order]) => lotSize
+  def constantSizeLotChooser(lotSize: Int = 1) = (price: Price, signal: TradeSignal) => lotSize
 
   def calculateAccountChanges[Mat](ticks: Source[TickIn, Mat],
                                    accountManagerFactory: AccountManagerFactory)
