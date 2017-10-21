@@ -32,6 +32,16 @@ class TradeEventsTest extends StockchartsTest {
   val lotSize = 1
   val accManagerFactory = AccountManager(initBalance, constantSizeLotChooser(lotSize))
 
+  def tick2Balance(initialBalance: Double) = {
+    var latestBalance = initialBalance
+    (ticks: TickIn) => ticks match {
+      case TickIn(price, None) => latestBalance
+      case TickIn(price, Some(_)) =>
+        latestBalance = latestBalance - (price.close * lotSize)
+        latestBalance
+    }
+  }
+
   "AccountManager" should "open positions according to trade signals" in {
     val calculatedEvents = Await.result(
       calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
@@ -54,15 +64,46 @@ class TradeEventsTest extends StockchartsTest {
       calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
       .map(_.account.balance)
 
-    var latestBalance = initBalance.toDouble
-    val rightBalances = ticks.map {
-      case TickIn(price, None) => latestBalance
-      case TickIn(price, Some(_)) =>
-        latestBalance = latestBalance - (price.close * lotSize)
-        latestBalance
+    val rightBalances = ticks.map(tick2Balance(initBalance.toDouble))
+    calculatedBalances shouldBe rightBalances
+  }
+
+  it should "track equity with correlation with the price" in {
+    def equity(currentPrice: Price, openOrders: List[Order]) = openOrders.map { order =>
+      val diff = BigDecimal(order.openPrice.close) - BigDecimal(currentPrice.close)
+      order.orderType match {
+        case OrderType.Buy => BigDecimal(order.openPrice.close) + diff
+        case OrderType.Sell => BigDecimal(order.openPrice.close) - diff
+      }
+    }.sum.toDouble
+
+    def addOpenOrders(initialOpenOrders: List[Order]) = {
+      var openOrders = initialOpenOrders
+      val idGen = makeIdGen()
+
+      (tickIn: TickIn) => tickIn match {
+        case TickIn(price, None) => (price, openOrders)
+        case TickIn(price, Some(TradeSignal.OpenBuy)) =>
+          openOrders = openOrders :+ Order(idGen(), price, OrderType.Buy, lotSize)
+          (price, openOrders)
+        case TickIn(price, Some(TradeSignal.OpenSell)) =>
+          openOrders = openOrders :+ Order(idGen(), price, OrderType.Sell, lotSize)
+          (price, openOrders)
+      }
     }
 
-    calculatedBalances shouldBe rightBalances
+    val changesFromOpenOrders = ticks
+      .map(addOpenOrders(List.empty[Order]))
+      .map { case (price, openOrders) => equity(price, openOrders) }
+
+    val balances = ticks.map(tick2Balance(initBalance.toDouble))
+    val rightEquities = changesFromOpenOrders.zip(balances).map { case (c, b) => c + b }
+
+    val calculatedEquities = Await.result(
+      calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
+      .map(_.account.equity)
+
+    calculatedEquities shouldBe rightEquities
   }
 
 }

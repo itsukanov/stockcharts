@@ -10,18 +10,17 @@ trait AccountManagerFactory {
 
 object AccountManager {
   def apply(initialBalance: Double,
-            lotSizeChooser: (Price, TradeSignal, Set[Order]) => Int) = new AccountManagerFactory{
+            lotSizeChooser: (Price, TradeSignal, Set[Order]) => Int) = new AccountManagerFactory {
+
     override def props: Props = Props(new AccountManager(initialBalance, lotSizeChooser))
   }
 }
 
 class AccountManager(initialBalance: Double,
-                     lotSizeChooser: (Price, TradeSignal, Set[Order]) => Int
-                    ) extends Actor {
+                     lotSizeChooser: (Price, TradeSignal, Set[Order]) => Int) extends Actor {
 
   var lastAcc = Account(initialBalance, equity = 0)
-
-  var openOrders = Set.empty[Order]
+  var openOrders = List.empty[Order]
 
   var lastId = 0L
   def orderId = {
@@ -35,9 +34,9 @@ class AccountManager(initialBalance: Double,
       val newOpened = signalOption match {
         case None => Nil
         case Some(TradeSignal.OpenBuy) =>
-          Set(Order(orderId, currentPrice, OrderType.Buy, lotSizeChooser(currentPrice, TradeSignal.OpenBuy, openOrders)))
+          Set(Order(orderId, currentPrice, OrderType.Buy, lotSizeChooser(currentPrice, TradeSignal.OpenBuy, openOrders.toSet)))
         case Some(TradeSignal.OpenSell) =>
-          Set(Order(orderId, currentPrice, OrderType.Sell, lotSizeChooser(currentPrice, TradeSignal.OpenSell, openOrders)))
+          Set(Order(orderId, currentPrice, OrderType.Sell, lotSizeChooser(currentPrice, TradeSignal.OpenSell, openOrders.toSet)))
       }
 
       val changeFromClosed = newClosed.map { order =>
@@ -56,16 +55,13 @@ class AccountManager(initialBalance: Double,
 
       openOrders = openOrders ++ newOpened
 
-
       val newEquity = openOrders.map { order =>
         val diff = (BigDecimal(currentPrice.close) - BigDecimal(order.openPrice.close)) * BigDecimal(order.size)
         order.orderType match {
-          case OrderType.Buy => diff
-          case OrderType.Sell => - diff
+          case OrderType.Buy => order.openPrice.close + diff
+          case OrderType.Sell => order.openPrice.close - diff
         }
-      }.sum.toDouble
-
-
+      }.sum.toDouble + newBalance
 
       lastAcc = lastAcc.copy(balance = newBalance, equity = newEquity)
       val tradeEvents: Set[TradeEvent] = newClosed.map(TradeEvent.OrderClosed) ++ newOpened.map(TradeEvent.OrderOpened)
