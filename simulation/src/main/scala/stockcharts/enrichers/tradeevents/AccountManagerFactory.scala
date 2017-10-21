@@ -40,7 +40,7 @@ class AccountManager(initialBalance: Double,
       }
 
       val changeFromClosed = newClosed.map { order =>
-        val diff = (BigDecimal(currentPrice.close) - BigDecimal(order.openPrice.close)) * BigDecimal(order.size)
+        val diff = (BigDecimal(currentPrice.close.cents) - BigDecimal(order.openPrice)) * BigDecimal(order.size)
         order.orderType match {
           case OrderType.Buy => diff
           case OrderType.Sell => - diff
@@ -48,7 +48,7 @@ class AccountManager(initialBalance: Double,
       }.sum.toDouble
 
       val changeFromOpened = newOpened
-        .map(order => BigDecimal(order.openPrice.close) * BigDecimal(order.size))
+        .map(order => BigDecimal(order.openPrice) * BigDecimal(order.size))
         .sum.toDouble
 
       val newBalance = lastAcc.balance + changeFromClosed - changeFromOpened
@@ -56,10 +56,10 @@ class AccountManager(initialBalance: Double,
       openOrders = openOrders ++ newOpened
 
       val newEquity = openOrders.map { order =>
-        val diff = (BigDecimal(currentPrice.close) - BigDecimal(order.openPrice.close)) * BigDecimal(order.size)
+        val diff = (BigDecimal(currentPrice.close.cents) - BigDecimal(order.openPrice)) * BigDecimal(order.size)
         order.orderType match {
-          case OrderType.Buy => order.openPrice.close + diff
-          case OrderType.Sell => order.openPrice.close - diff
+          case OrderType.Buy => order.openPrice + diff
+          case OrderType.Sell => order.openPrice - diff
         }
       }.sum.toDouble + newBalance
 

@@ -14,7 +14,9 @@ object TradeEvent {
   case class OrderClosed(order: Order) extends TradeEvent
 }
 
-case class Order(id: Long, openPrice: Price, orderType: OrderType, size: Int)
+case class Order(id: Long, price: Price, orderType: OrderType, size: Int) {
+  val openPrice = price.close.cents
+}
 
 trait OrderType
 object OrderType {

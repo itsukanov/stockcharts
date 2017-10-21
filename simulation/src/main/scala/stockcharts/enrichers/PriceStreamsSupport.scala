@@ -21,7 +21,7 @@ object PriceStreamsSupport {
       val tick2IndicatorValue = arf.actorOf(indicator.props())
       import arf.dispatcher
 
-      prices.map(price => new BaseTick(price.date.atStartOfDay(ZoneOffset.UTC), price.open, price.high, price.low, price.close, 0))
+      prices.map(price => new BaseTick(price.date.atStartOfDay(ZoneOffset.UTC), price.open.cents, price.high.cents, price.low.cents, price.close.cents, 0))
         .mapAsync(1)(tick => tick2IndicatorValue ? tick)
         .map(_.asInstanceOf[Out])
         .watchTermination() { case (mat, futureDone) =>
