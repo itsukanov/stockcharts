@@ -19,7 +19,9 @@ class TradeEventsTest extends StockchartsTest {
 
   val initBalance = Money(100)
   val lotSize = 1
-  val accManagerFactory = AccountManager(initBalance, constantSizeLotChooser(lotSize))
+  val takeProfit = Money(10)
+  val stopLoss = Money(5)
+  val accManagerFactory = AccountManager(initBalance, constantSizeLotChooser(lotSize), takeProfitStopLossChecker(takeProfit, stopLoss))
 
   "AccountManager" should "open positions according to trade signals" in {
     val ticks = List(
@@ -78,7 +80,32 @@ class TradeEventsTest extends StockchartsTest {
         calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
 
       calculatedTicksOut.map(_.account) shouldBe expectedAccounts
-      calculatedTicksOut.map(_.events.size) shouldBe expectedEventsSize
+      calculatedTicksOut.map(_.events.size) shouldBe expectedEventsSize // todo check types instead of size
+  }
+
+  it should "close orders in stop loss and take profit cases" in {
+    val takeProfit = 10
+    val stopLoss = 5
+    val accManagerFactory = AccountManager(initBalance, constantSizeLotChooser(lotSize), takeProfitStopLossChecker(Money(takeProfit), Money(stopLoss)))
+
+    val (ticks, expectedAccounts) = List(
+      (TickIn(price(10), Some(TradeSignal.OpenBuy)),  Account(Money(90),  Money(100))),
+      (TickIn(price(10 + takeProfit), None),          Account(Money(110), Money(110))),
+      (TickIn(price(20), Some(TradeSignal.OpenBuy)),  Account(Money(90),  Money(110))),
+      (TickIn(price(20 - stopLoss), None),            Account(Money(105), Money(105))),
+      (TickIn(price(15), Some(TradeSignal.OpenSell)), Account(Money(90),  Money(105))),
+      (TickIn(price(15 - takeProfit), None),          Account(Money(115), Money(115))),
+      (TickIn(price(5), Some(TradeSignal.OpenSell)),  Account(Money(110), Money(115))),
+      (TickIn(price(5 + stopLoss), None),             Account(Money(110), Money(110)))
+    ).unzip
+
+    val calculatedAccounts = Await.result(
+      calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
+      .map(_.account)
+
+    calculatedAccounts zip expectedAccounts foreach { case (calculated, expected) =>
+        calculated shouldBe expected
+    }
   }
 
 }
