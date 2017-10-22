@@ -66,4 +66,19 @@ class TradeEventsTest extends StockchartsTest {
     calculatedAccounts shouldBe expectedAccounts
   }
 
+    it should "be impossible to make the balance negative" in {
+      val (ticks, expectedAccounts, expectedEventsSize) = List(
+        (TickIn(price(50), None),                       Account(Money(100), Money(100)), 0),
+        (TickIn(price(50), Some(TradeSignal.OpenBuy)),  Account(Money(50), Money(100)), 1),
+        (TickIn(price(51), Some(TradeSignal.OpenBuy)),  Account(Money(50), Money(101)), 0), // not enough balance to open
+        (TickIn(price(50), Some(TradeSignal.OpenBuy)),  Account(Money(0),  Money(100)), 1)
+      ).unzip3
+
+      val calculatedTicksOut = Await.result(
+        calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
+
+      calculatedTicksOut.map(_.account) shouldBe expectedAccounts
+      calculatedTicksOut.map(_.events.size) shouldBe expectedEventsSize
+  }
+
 }

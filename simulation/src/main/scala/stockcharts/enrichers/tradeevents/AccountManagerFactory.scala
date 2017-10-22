@@ -33,6 +33,19 @@ class AccountManager(initialBalance: Money,
       List(Order(orderId, tickIn.price, OrderType.Sell, lotSizeChooser(tickIn.price, TradeSignal.OpenSell)))
   }
 
+  def keepBalancePositive(balance: Money) = {
+    var restBalance = balance.cents
+    (order: Order) => {
+      val moneyForOpening = order.openPrice * order.size
+      moneyForOpening <= restBalance match {
+        case false => false
+        case true =>
+          restBalance -= moneyForOpening
+          true
+      }
+    }
+  }
+
   def moneyFromClosedOrders(closedOrders: List[Order], currentPrice: Price) = closedOrders.map { order =>
     val diff = (BigDecimal(currentPrice.close.cents) - BigDecimal(order.openPrice)) * BigDecimal(order.size)
     order.orderType match {
@@ -58,10 +71,12 @@ class AccountManager(initialBalance: Money,
   def withState(previousAccState: Account, previousOpenOrders: List[Order]): Receive = {
     case tickIn @ TickIn(currentPrice, signalOption) =>
       val justClosedOrders = List.empty[Order] // todo implement closing orders
+      val moneyAfterClosingOrders = moneyFromClosedOrders(justClosedOrders, currentPrice)
       val justOpenedOrders = openNewOrders(tickIn)
+        .filter(keepBalancePositive(previousAccState.balance + Money(moneyAfterClosingOrders.toLong)))
 
       val newOpenOrders = previousOpenOrders ++ justOpenedOrders
-      val newBalance = previousAccState.balance.cents + moneyFromClosedOrders(justClosedOrders, currentPrice) - moneyForOpeningOrders(justOpenedOrders)
+      val newBalance = previousAccState.balance.cents + moneyAfterClosingOrders - moneyForOpeningOrders(justOpenedOrders)
       val newEquity = newBalance + potentialProfit(newOpenOrders, currentPrice)
       val newAccState = Account(Money(newBalance.toLong), Money(newEquity.toLong))
 
