@@ -2,21 +2,21 @@ package stockcharts.enrichers.tradeevents
 
 import akka.actor.{Actor, Props}
 import stockcharts.enrichers.tradesignals.TradeSignal
-import stockcharts.models.Price
+import stockcharts.models.{Money, Price}
 
 trait AccountManagerFactory {
   def props: Props
 }
 
 object AccountManager {
-  def apply(initialBalance: Double,
+  def apply(initialBalance: Money,
             lotSizeChooser: (Price, TradeSignal) => Int) = new AccountManagerFactory {
 
     override def props: Props = Props(new AccountManager(initialBalance, lotSizeChooser))
   }
 }
 
-class AccountManager(initialBalance: Double,
+class AccountManager(initialBalance: Money,
                      lotSizeChooser: (Price, TradeSignal) => Int) extends Actor {
 
   var lastId = 0L
@@ -53,7 +53,7 @@ class AccountManager(initialBalance: Double,
     }
   }.sum
 
-  override def receive: Receive = withState(Account(initialBalance, equity = 0), List.empty[Order])
+  override def receive: Receive = withState(Account(initialBalance, equity = Money.zero), List.empty[Order])
 
   def withState(previousAccState: Account, previousOpenOrders: List[Order]): Receive = {
     case tickIn @ TickIn(currentPrice, signalOption) =>
@@ -61,9 +61,9 @@ class AccountManager(initialBalance: Double,
       val justOpenedOrders = openNewOrders(tickIn)
 
       val newOpenOrders = previousOpenOrders ++ justOpenedOrders
-      val newBalance = previousAccState.balance + moneyFromClosedOrders(justClosedOrders, currentPrice) - moneyForOpeningOrders(justOpenedOrders)
+      val newBalance = previousAccState.balance.cents + moneyFromClosedOrders(justClosedOrders, currentPrice) - moneyForOpeningOrders(justOpenedOrders)
       val newEquity = newBalance + potentialProfit(newOpenOrders, currentPrice)
-      val newAccState = Account(newBalance.toDouble, newEquity.toDouble)
+      val newAccState = Account(Money(newBalance.toLong), Money(newEquity.toLong))
 
       context.become(withState(newAccState, newOpenOrders))
 

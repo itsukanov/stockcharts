@@ -17,7 +17,7 @@ class TradeEventsTest extends StockchartsTest {
     Price(today.plusDays(count), Money.zero, Money.zero, Money.zero, Money(close))
   }
 
-  val initBalance = 100
+  val initBalance = Money(100)
   val lotSize = 1
   val accManagerFactory = AccountManager(initBalance, constantSizeLotChooser(lotSize))
 
@@ -49,14 +49,14 @@ class TradeEventsTest extends StockchartsTest {
 
   it should "decreases balance and tracks equity properly" in {
     val (ticks, expectedAccounts) = List(
-      (TickIn(price(5), None),                       Account(100, 100)),
-      (TickIn(price(5), Some(TradeSignal.OpenBuy)),  Account(95, 100)),
-      (TickIn(price(10), None),                      Account(95, 105)),
-      (TickIn(price(8), None),                       Account(95, 103)),
-      (TickIn(price(8), Some(TradeSignal.OpenSell)), Account(87, 103)),
-      (TickIn(price(5), None),                       Account(87, 103)),
-      (TickIn(price(4), Some(TradeSignal.OpenSell)), Account(83, 103)),
-      (TickIn(price(3), None),                       Account(83, 104))
+      (TickIn(price(5), None),                       Account(Money(100), Money(100))),
+      (TickIn(price(5), Some(TradeSignal.OpenBuy)),  Account(Money(95), Money(100))),
+      (TickIn(price(10), None),                      Account(Money(95), Money(105))),
+      (TickIn(price(8), None),                       Account(Money(95), Money(103))),
+      (TickIn(price(8), Some(TradeSignal.OpenSell)), Account(Money(87), Money(103))),
+      (TickIn(price(5), None),                       Account(Money(87), Money(103))),
+      (TickIn(price(4), Some(TradeSignal.OpenSell)), Account(Money(83), Money(103))),
+      (TickIn(price(3), None),                       Account(Money(83), Money(104)))
     ).unzip
 
     val calculatedAccounts = Await.result(
