@@ -1,9 +1,9 @@
 package stockcharts.enrichers.tradeevents
 
 import stockcharts.enrichers.tradesignals.TradeSignal
-import stockcharts.models.Price
+import stockcharts.models.{Money, Price}
 
-case class Account(balance: Double, equity: Double)
+case class Account(balance: Money, equity: Money)
 
 case class TickIn(price: Price, tradeSignal: Option[TradeSignal])
 case class TickOut(account: Account, events: List[TradeEvent])
