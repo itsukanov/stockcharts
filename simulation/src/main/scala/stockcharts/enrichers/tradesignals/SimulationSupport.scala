@@ -4,12 +4,20 @@ import akka.actor.{ActorRefFactory, PoisonPill}
 import akka.pattern.ask
 import akka.stream.scaladsl.Source
 import akka.util.Timeout
-import stockcharts.enrichers.tradeevents.{AccountManagerFactory, TickIn, TickOut}
-import stockcharts.models.Price
+import stockcharts.enrichers.tradeevents.{AccountManagerFactory, Order, OrderType, TickIn, TickOut}
+import stockcharts.models.{Money, Price}
 
 object SimulationSupport {
 
   def constantSizeLotChooser(lotSize: Int = 1) = (price: Price, signal: TradeSignal) => lotSize
+
+  def takeProfitStopLossChecker(takeProfit: Money, stopLoss: Money) = (order: Order, currentPrice: Price) => {
+    val diff = currentPrice.close.cents - order.openPrice
+    order.orderType match {
+      case OrderType.Buy => diff >= takeProfit.cents || - diff >= stopLoss.cents
+      case OrderType.Sell => - diff >= takeProfit.cents || diff >= stopLoss.cents
+    }
+  }
 
   def calculateAccountChanges[Mat](ticks: Source[TickIn, Mat],
                                    accountManagerFactory: AccountManagerFactory)

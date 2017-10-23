@@ -10,14 +10,17 @@ trait AccountManagerFactory {
 
 object AccountManager {
   def apply(initialBalance: Money,
-            lotSizeChooser: (Price, TradeSignal) => Int) = new AccountManagerFactory {
+            lotSizeChooser: (Price, TradeSignal) => Int,
+            isOrderReadyToClose: (Order, Price) => Boolean) = new AccountManagerFactory {
 
-    override def props: Props = Props(new AccountManager(initialBalance, lotSizeChooser))
+    override def props: Props = Props(new AccountManager(initialBalance, lotSizeChooser, isOrderReadyToClose))
   }
 }
 
 class AccountManager(initialBalance: Money,
-                     lotSizeChooser: (Price, TradeSignal) => Int) extends Actor {
+                     lotSizeChooser: (Price, TradeSignal) => Int,
+                     isOrderReadyToClose: (Order, Price) => Boolean
+                    ) extends Actor {
 
   var lastId = 0L
   def orderId = {
@@ -46,14 +49,6 @@ class AccountManager(initialBalance: Money,
     }
   }
 
-  def moneyFromClosedOrders(closedOrders: List[Order], currentPrice: Price) = closedOrders.map { order =>
-    val diff = (BigDecimal(currentPrice.close.cents) - BigDecimal(order.openPrice)) * BigDecimal(order.size)
-    order.orderType match {
-      case OrderType.Buy => diff
-      case OrderType.Sell => - diff
-    }
-  }.sum
-
   def moneyForOpeningOrders(orders: List[Order]) = orders
     .map(order => BigDecimal(order.openPrice) * BigDecimal(order.size))
     .sum
@@ -70,13 +65,13 @@ class AccountManager(initialBalance: Money,
 
   def withState(previousAccState: Account, previousOpenOrders: List[Order]): Receive = {
     case tickIn @ TickIn(currentPrice, signalOption) =>
-      val justClosedOrders = List.empty[Order] // todo implement closing orders
-      val moneyAfterClosingOrders = moneyFromClosedOrders(justClosedOrders, currentPrice)
+      val (justClosedOrders, stillOpen) = previousOpenOrders.partition(order => isOrderReadyToClose(order, currentPrice))
+      val moneyFromClosedOrders = potentialProfit(justClosedOrders, currentPrice)
       val justOpenedOrders = openNewOrders(tickIn)
-        .filter(keepBalancePositive(previousAccState.balance + Money(moneyAfterClosingOrders.toLong)))
+        .filter(keepBalancePositive(previousAccState.balance + Money(moneyFromClosedOrders.toLong)))
 
-      val newOpenOrders = previousOpenOrders ++ justOpenedOrders
-      val newBalance = previousAccState.balance.cents + moneyAfterClosingOrders - moneyForOpeningOrders(justOpenedOrders)
+      val newOpenOrders = stillOpen ++ justOpenedOrders
+      val newBalance = previousAccState.balance.cents + moneyFromClosedOrders - moneyForOpeningOrders(justOpenedOrders)
       val newEquity = newBalance + potentialProfit(newOpenOrders, currentPrice)
       val newAccState = Account(Money(newBalance.toLong), Money(newEquity.toLong))
 
