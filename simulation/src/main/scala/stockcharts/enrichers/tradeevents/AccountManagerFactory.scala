@@ -28,24 +28,17 @@ class AccountManager(initialBalance: Money,
     lastId
   }
 
-  def openNewOrders(tickIn: TickIn) = tickIn.tradeSignal match {
-    case None => List.empty[Order]
-    case Some(TradeSignal.OpenBuy) =>
-      List(Order(orderId, tickIn.price, OrderType.Buy, lotSizeChooser(tickIn.price, TradeSignal.OpenBuy)))
-    case Some(TradeSignal.OpenSell) =>
-      List(Order(orderId, tickIn.price, OrderType.Sell, lotSizeChooser(tickIn.price, TradeSignal.OpenSell)))
-  }
+  def openNewOrders(tickIn: TickIn, balance: Money) = {
+    val lotSize = lotSizeChooser(tickIn.price, TradeSignal.OpenBuy)
+    val orderPrice = lotSize * tickIn.price.close.cents
+    val canAfford = orderPrice <= balance.cents
 
-  def keepBalancePositive(balance: Money) = {
-    var restBalance = balance.cents
-    (order: Order) => {
-      val moneyForOpening = order.openPrice * order.size
-      moneyForOpening <= restBalance match {
-        case false => false
-        case true =>
-          restBalance -= moneyForOpening
-          true
-      }
+    tickIn.tradeSignal match {
+      case Some(TradeSignal.OpenBuy) if canAfford =>
+        List(Order(orderId, tickIn.price, OrderType.Buy, lotSize))
+      case Some(TradeSignal.OpenSell) if canAfford =>
+        List(Order(orderId, tickIn.price, OrderType.Sell, lotSize))
+      case _ => List.empty[Order]
     }
   }
 
@@ -67,8 +60,8 @@ class AccountManager(initialBalance: Money,
     case tickIn @ TickIn(currentPrice, signalOption) =>
       val (justClosedOrders, stillOpen) = previousOpenOrders.partition(order => isOrderReadyToClose(order, currentPrice))
       val moneyFromClosedOrders = potentialProfit(justClosedOrders, currentPrice)
-      val justOpenedOrders = openNewOrders(tickIn)
-        .filter(keepBalancePositive(previousAccState.balance + Money(moneyFromClosedOrders.toLong)))
+      val justOpenedOrders = openNewOrders(tickIn, balance =
+        previousAccState.balance + Money(moneyFromClosedOrders.toLong))
 
       val newOpenOrders = stillOpen ++ justOpenedOrders
       val newBalance = previousAccState.balance.cents + moneyFromClosedOrders - moneyForOpeningOrders(justOpenedOrders)
