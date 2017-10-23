@@ -37,7 +37,7 @@ class TradeEventsTest extends StockchartsTest {
       calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
       .map(_.events)
 
-    val orderIdGen = makeIdGen()
+    val orderIdGen = makeIdGen
     val rightEvents: List[List[TradeEvent]] = ticks.map {
       case TickIn(price, None) => List.empty[TradeEvent]
       case TickIn(price, Some(TradeSignal.OpenBuy)) =>
@@ -68,19 +68,37 @@ class TradeEventsTest extends StockchartsTest {
     calculatedAccounts shouldBe expectedAccounts
   }
 
-    it should "be impossible to make the balance negative" in {
-      val (ticks, expectedAccounts, expectedEventsSize) = List(
-        (TickIn(price(50), None),                       Account(Money(100), Money(100)), 0),
-        (TickIn(price(50), Some(TradeSignal.OpenBuy)),  Account(Money(50), Money(100)), 1),
-        (TickIn(price(51), Some(TradeSignal.OpenBuy)),  Account(Money(50), Money(101)), 0), // not enough balance to open
-        (TickIn(price(50), Some(TradeSignal.OpenBuy)),  Account(Money(0),  Money(100)), 1)
-      ).unzip3
+  def makeOrderOpenedEventsGen = {
+    val idGen = makeIdGen
+    (price: Price, signal: Option[TradeSignal], canAfford: Boolean) => {
+      signal match {
+        case Some(TradeSignal.OpenBuy) if canAfford =>
+          List(TradeEvent.OrderOpened(Order(idGen(), price, OrderType.Buy, lotSize)))
+        case Some(TradeSignal.OpenSell) if canAfford =>
+          List(TradeEvent.OrderOpened(Order(idGen(), price, OrderType.Sell, lotSize)))
+        case _ => Nil
+      }
+    }
+  }
 
-      val calculatedTicksOut = Await.result(
-        calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
+  it should "be impossible to make the balance negative" in {
+    val (ticks, expectedAccounts, canAffords) = List(
+      (TickIn(price(50), None),                      Account(Money(100), Money(100)), true),
+      (TickIn(price(50), Some(TradeSignal.OpenBuy)), Account(Money(50), Money(100)), true),
+      (TickIn(price(51), Some(TradeSignal.OpenBuy)), Account(Money(50), Money(101)), false), // not enough balance to open
+      (TickIn(price(50), Some(TradeSignal.OpenBuy)), Account(Money(0), Money(100)), true)
+    ).unzip3
 
-      calculatedTicksOut.map(_.account) shouldBe expectedAccounts
-      calculatedTicksOut.map(_.events.size) shouldBe expectedEventsSize // todo check types instead of size
+    val calculatedTicksOut = Await.result(
+      calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
+
+    calculatedTicksOut.map(_.account) shouldBe expectedAccounts
+
+    val eventGen = makeOrderOpenedEventsGen
+    val expectedEvents = ticks zip canAffords map { case (TickIn(price, signal), canAfford) =>
+      eventGen(price, signal, canAfford)
+    }
+    calculatedTicksOut.map(_.events) shouldBe expectedEvents
   }
 
   it should "close orders in stop loss and take profit cases" in {
@@ -99,12 +117,35 @@ class TradeEventsTest extends StockchartsTest {
       (TickIn(price(5 + stopLoss), None),             Account(Money(110), Money(110)))
     ).unzip
 
-    val calculatedAccounts = Await.result(
+    val calculatedTicksOut = Await.result(
       calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
-      .map(_.account)
 
-    calculatedAccounts zip expectedAccounts foreach { case (calculated, expected) =>
+    calculatedTicksOut.map(_.account) zip expectedAccounts foreach { case (calculated, expected) =>
         calculated shouldBe expected
+    }
+
+    def addOrderClosedEvents(openEvents: List[List[TradeEvent.OrderOpened]]) = {
+      def impl(acc: List[List[TradeEvent]], rest: List[List[TradeEvent.OrderOpened]]): List[List[TradeEvent]] =
+        rest match {
+          case Nil => acc
+          case x :: xs => x match {
+            case Nil => impl(acc, xs)
+            case event@List(TradeEvent.OrderOpened(order)) =>
+              impl(acc :+ event :+ List(TradeEvent.OrderClosed(order)), xs)
+          }
+        }
+
+      impl(Nil, openEvents)
+    }
+
+    val eventGen = makeOrderOpenedEventsGen
+    val expectedOrderOpenedEvents = ticks
+      .map(tick => eventGen(tick.price, tick.tradeSignal, true))
+    val expectedEvents = addOrderClosedEvents(expectedOrderOpenedEvents)
+    val calculatedEvents = calculatedTicksOut.map(_.events)
+
+    calculatedEvents zip expectedEvents foreach { case (calculated, expected) =>
+      calculated shouldBe expected
     }
   }
 
