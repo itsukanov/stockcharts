@@ -1,7 +1,7 @@
-package stockcharts.enrichers.tradesignals
+package stockcharts.simulation.enrichers.tradesignals
 
 import akka.stream.scaladsl.Source
-import stockcharts.enrichers.{NumericStreamsSupport, StockchartsTest}
+import stockcharts.simulation.enrichers.{NumericStreamsSupport, StockchartsTest}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

@@ -1,12 +1,15 @@
-package stockcharts.enrichers.indicators
+package stockcharts.simulation.enrichers.indicators
+
+import java.time.LocalDate
 
 import akka.actor.Props
 import eu.verdelhan.ta4j.{Decimal, TimeSeries}
 import eu.verdelhan.ta4j.indicators.helpers.ClosePriceIndicator
+import stockcharts.models.Price
 
 class Indicator[Pure, Out](maximumTickCount: Int,
                            indicatorMaker: TimeSeries => eu.verdelhan.ta4j.Indicator[Pure],
-                           converter: Pure => Out) {
+                           converter: (Price, Pure) => Out) {
 
   def props() = Props(new IndicatorCalculations(
     maximumTickCount,
@@ -15,14 +18,14 @@ class Indicator[Pure, Out](maximumTickCount: Int,
   ))
 }
 
-case class RSIValue(v: Double) extends AnyVal
+case class RSIValue(date: LocalDate, value: Double)
 
 object RSIIndicator {
 
   def apply(period: Int) = new Indicator(
     maximumTickCount = period,
-    indicatorMaker = series => new eu.verdelhan.ta4j.indicators.RSIIndicator(new ClosePriceIndicator(series), period),
-    converter = (decimal: Decimal) => RSIValue(decimal.toDouble)
+    indicatorMaker = series => new eu.verdelhan.ta4j.indicators.SmoothedRSIIndicator(new ClosePriceIndicator(series), period),
+    converter = (price: Price, decimal: Decimal) => RSIValue(price.date, decimal.toDouble)
   )
 
 }
@@ -32,7 +35,7 @@ object SMAIndicator {
   def apply(period: Int) = new Indicator(
     maximumTickCount = period,
     indicatorMaker = series => new eu.verdelhan.ta4j.indicators.SMAIndicator(new ClosePriceIndicator(series), period),
-    converter = (decimal: Decimal) => decimal.toDouble
+    converter = (price: Price, decimal: Decimal) => decimal.toDouble
   )
 
 }

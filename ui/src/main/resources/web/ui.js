@@ -538,13 +538,12 @@ function processWsEvent(chartUpdating) {
       case 'IndicatorValue':
         indicatorData.push(newData);
         break;
-      case 'Balance':
+      case 'Account':
         newData.equity = undefined;
         balanceData.push(newData);
 
-        var copy = JSON.parse(wsEvent.data);
+        var copy = JSON.parse(wsEvent);
         copy.balance = undefined;
-
         equityData.push(copy);
         break;
       case 'Simulation done':

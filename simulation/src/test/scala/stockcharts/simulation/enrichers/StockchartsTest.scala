@@ -1,4 +1,4 @@
-package stockcharts.enrichers
+package stockcharts.simulation.enrichers
 
 import java.time.LocalDate
 
@@ -25,14 +25,6 @@ trait StockchartsTest extends FlatSpec with Matchers with BeforeAndAfterAll {
   implicit val materializer = ActorMaterializer()
 
   val today = LocalDate.now()
-
-  def makeIdGen = {
-    var id = 0
-    () => {
-      id += 1
-      id
-    }
-  }
 
   override def afterAll() = {
     as.terminate()

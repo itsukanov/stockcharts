@@ -1,4 +1,4 @@
-package stockcharts.enrichers.tradesignals
+package stockcharts.simulation.enrichers.tradesignals
 
 import akka.actor.{Actor, Props}
 

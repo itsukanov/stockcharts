@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import stockcharts.Config.Stocks
 import stockcharts.json.JsonConverting
 import stockcharts.models.{Money, SimulationConf}
+import stockcharts.simulation.uisupport.UIModel
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -40,12 +41,14 @@ object Routing {
   private case class SystemMessage(`type`: String)
   private val done = JsonConverting.toJson(SystemMessage("Simulation done"))
 
-  def wsCommandHandler(simulationFactory: SimulationConf => Source[String, _]) =
+  def wsCommandHandler(simulationFactory: SimulationConf => Source[UIModel, _],
+                       uiSerializer: Flow[UIModel, String, _]) =
     Flow[Message].flatMapConcat {
       case TextMessage.Strict(confAsStr) =>
         tryParseConf(confAsStr) match {
           case Success(conf) =>
             val simulation = simulationFactory(conf)
+              .via(uiSerializer)
               .idleTimeout(5 seconds)
               .recover {
                 case ex: scala.concurrent.TimeoutException => done
@@ -59,15 +62,16 @@ object Routing {
 
           case Failure(thr) =>
             log.warn(s"Can't extract simulation conf from '$confAsStr'", thr)
-            Source.single(TextMessage(s"Can't extract simulation conf from '$confAsStr' because:\n${thr.getMessage}"))
+            Source.single(TextMessage(s"Can't extract simulation conf from '$confAsStr' because of:\n${thr.getMessage}"))
         }
 
       case _ => Source.single(TextMessage("Message unsupported"))
     }
 
-  def apply(simulationFactory: SimulationConf => Source[String, _]) =
+  def apply(simulationFactory: SimulationConf => Source[UIModel, _],
+            uiSerializer: Flow[UIModel, String, _]) =
     path("simulate") {
-      handleWebSocketMessages(wsCommandHandler(simulationFactory))
+      handleWebSocketMessages(wsCommandHandler(simulationFactory, uiSerializer))
     }
 
 }

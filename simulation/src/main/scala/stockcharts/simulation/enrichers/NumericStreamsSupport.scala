@@ -1,10 +1,10 @@
-package stockcharts.enrichers
+package stockcharts.simulation.enrichers
 
 import akka.actor.{ActorRefFactory, PoisonPill}
 import akka.pattern.ask
 import akka.stream.scaladsl.Source
 import akka.util.Timeout
-import stockcharts.enrichers.tradesignals.{TradeInSignalsStrategy, TradeSignal}
+import stockcharts.simulation.enrichers.tradesignals.{TradeInSignalsStrategy, TradeSignal}
 
 object NumericStreamsSupport {
 

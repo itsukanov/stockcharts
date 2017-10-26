@@ -1,9 +1,9 @@
-package stockcharts.enrichers.tradeevents
+package stockcharts.simulation.enrichers.tradeevents
 
 import akka.stream.scaladsl.Source
-import stockcharts.enrichers.StockchartsTest
-import stockcharts.enrichers.tradesignals.SimulationSupport._
-import stockcharts.enrichers.tradesignals.TradeSignal
+import stockcharts.simulation.enrichers.StockchartsTest
+import stockcharts.simulation.enrichers.tradesignals.SimulationSupport._
+import stockcharts.simulation.enrichers.tradesignals.TradeSignal
 import stockcharts.models.{Money, Price}
 
 import scala.concurrent.Await
@@ -37,13 +37,13 @@ class TradeEventsTest extends StockchartsTest {
       calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
       .map(_.events)
 
-    val orderIdGen = makeIdGen
+    val orderIdGen = Iterator.from(1)
     val rightEvents: List[List[TradeEvent]] = ticks.map {
       case TickIn(price, None) => List.empty[TradeEvent]
       case TickIn(price, Some(TradeSignal.OpenBuy)) =>
-        List(TradeEvent.OrderOpened(Order(orderIdGen(), price, OrderType.Buy, lotSize)))
+        List(TradeEvent.OrderOpened(Order(orderIdGen.next(), price, OrderType.Buy, lotSize)))
       case TickIn(price, Some(TradeSignal.OpenSell)) =>
-        List(TradeEvent.OrderOpened(Order(orderIdGen(), price, OrderType.Sell, lotSize)))
+        List(TradeEvent.OrderOpened(Order(orderIdGen.next(), price, OrderType.Sell, lotSize)))
     }
 
     calculatedEvents shouldBe rightEvents
@@ -69,13 +69,13 @@ class TradeEventsTest extends StockchartsTest {
   }
 
   def makeOrderOpenedEventsGen = {
-    val idGen = makeIdGen
+    val orderIdGen = Iterator.from(1)
     (price: Price, signal: Option[TradeSignal], canAfford: Boolean) => {
       signal match {
         case Some(TradeSignal.OpenBuy) if canAfford =>
-          List(TradeEvent.OrderOpened(Order(idGen(), price, OrderType.Buy, lotSize)))
+          List(TradeEvent.OrderOpened(Order(orderIdGen.next(), price, OrderType.Buy, lotSize)))
         case Some(TradeSignal.OpenSell) if canAfford =>
-          List(TradeEvent.OrderOpened(Order(idGen(), price, OrderType.Sell, lotSize)))
+          List(TradeEvent.OrderOpened(Order(orderIdGen.next(), price, OrderType.Sell, lotSize)))
         case _ => Nil
       }
     }
