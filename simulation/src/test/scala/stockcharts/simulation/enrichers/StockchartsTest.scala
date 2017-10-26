@@ -26,14 +26,6 @@ trait StockchartsTest extends FlatSpec with Matchers with BeforeAndAfterAll {
 
   val today = LocalDate.now()
 
-  def makeIdGen = {
-    var id = 0
-    () => {
-      id += 1
-      id
-    }
-  }
-
   override def afterAll() = {
     as.terminate()
     materializer.shutdown()
