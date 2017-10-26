@@ -20,4 +20,7 @@ object JsonConverting {
 
   val toJsonFlow = Flow.fromFunction(toJson)
 
+  def toModel[T: Manifest](json: String) = parse(json)
+    .extract[T]
+
 }

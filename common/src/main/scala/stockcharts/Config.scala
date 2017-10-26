@@ -2,7 +2,7 @@ package stockcharts
 
 import com.typesafe.config.ConfigFactory
 import net.ceedubs.ficus.Ficus._
-import stockcharts.models.Stock
+import stockcharts.models.{Money, Stock}
 
 case class KafkaTopic(name: String, partitions: Int)
 
@@ -35,6 +35,12 @@ object Config {
   object UI {
     val host = conf.getString("ui.host")
     val port = conf.getInt("ui.port")
+  }
+
+  object RSIStrategyConf {
+    val rsiPeriod = conf.getInt("simulation.rsi-strategy.rsi-period")
+    val lotSize = conf.getInt("simulation.rsi-strategy.lot-size")
+    val initialBalance = Money(cents = conf.getInt("simulation.rsi-strategy.initial-balance-dollars") * 100)
   }
 
   object SimulationAppConf {
