@@ -21,7 +21,7 @@ object UIConverters {
   }
 
   implicit val rsiConverter = new UIConverter[RSIValue, UIIndicatorValue] {
-    override def convert(from: RSIValue): UIIndicatorValue = UIIndicatorValue(from.value)
+    override def convert(from: RSIValue): UIIndicatorValue = UIIndicatorValue(from.date, from.value)
   }
 
 }

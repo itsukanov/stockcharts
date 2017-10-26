@@ -16,9 +16,7 @@ case class Price(date: LocalDate,
                  open: Money,
                  high: Money,
                  low: Money,
-                 close: Money,
-                 `type`: String = "Price" // todo delete this field
-)
+                 close: Money)
 
 case class StockId(id: String) extends AnyVal
 
