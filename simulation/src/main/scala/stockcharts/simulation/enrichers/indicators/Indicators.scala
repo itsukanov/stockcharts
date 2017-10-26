@@ -1,4 +1,4 @@
-package stockcharts.enrichers.indicators
+package stockcharts.simulation.enrichers.indicators
 
 import akka.actor.Props
 import eu.verdelhan.ta4j.{Decimal, TimeSeries}
@@ -15,7 +15,7 @@ class Indicator[Pure, Out](maximumTickCount: Int,
   ))
 }
 
-case class RSIValue(v: Double) extends AnyVal
+case class RSIValue(value: Double) extends AnyVal
 
 object RSIIndicator {
 

@@ -1,4 +1,4 @@
-package stockcharts.enrichers
+package stockcharts.simulation.enrichers
 
 import java.time.LocalDate
 

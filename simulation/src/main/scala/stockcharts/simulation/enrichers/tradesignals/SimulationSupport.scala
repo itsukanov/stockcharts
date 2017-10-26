@@ -1,10 +1,10 @@
-package stockcharts.enrichers.tradesignals
+package stockcharts.simulation.enrichers.tradesignals
 
 import akka.actor.{ActorRefFactory, PoisonPill}
 import akka.pattern.ask
 import akka.stream.scaladsl.Source
 import akka.util.Timeout
-import stockcharts.enrichers.tradeevents.{AccountManagerFactory, Order, OrderType, TickIn, TickOut}
+import stockcharts.simulation.enrichers.tradeevents.{AccountManagerFactory, Order, OrderType, TickIn, TickOut}
 import stockcharts.models.{Money, Price}
 
 object SimulationSupport {

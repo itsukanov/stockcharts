@@ -1,4 +1,4 @@
-package stockcharts.enrichers.indicators
+package stockcharts.simulation.enrichers.indicators
 
 import java.util
 

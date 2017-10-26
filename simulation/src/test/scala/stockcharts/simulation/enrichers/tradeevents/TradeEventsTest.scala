@@ -1,9 +1,9 @@
-package stockcharts.enrichers.tradeevents
+package stockcharts.simulation.enrichers.tradeevents
 
 import akka.stream.scaladsl.Source
-import stockcharts.enrichers.StockchartsTest
-import stockcharts.enrichers.tradesignals.SimulationSupport._
-import stockcharts.enrichers.tradesignals.TradeSignal
+import stockcharts.simulation.enrichers.StockchartsTest
+import stockcharts.simulation.enrichers.tradesignals.SimulationSupport._
+import stockcharts.simulation.enrichers.tradesignals.TradeSignal
 import stockcharts.models.{Money, Price}
 
 import scala.concurrent.Await

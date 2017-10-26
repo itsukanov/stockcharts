@@ -1,7 +1,7 @@
-package stockcharts.enrichers.tradeevents
+package stockcharts.simulation.enrichers.tradeevents
 
 import akka.actor.{Actor, Props}
-import stockcharts.enrichers.tradesignals.TradeSignal
+import stockcharts.simulation.enrichers.tradesignals.TradeSignal
 import stockcharts.models.{Money, Price}
 
 trait AccountManagerFactory {

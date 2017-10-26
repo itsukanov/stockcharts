@@ -1,4 +1,4 @@
-package stockcharts.enrichers
+package stockcharts.simulation.enrichers
 
 import java.time.ZoneOffset
 
@@ -7,8 +7,8 @@ import akka.pattern._
 import akka.stream.scaladsl.Source
 import akka.util.Timeout
 import eu.verdelhan.ta4j.BaseTick
-import stockcharts.enrichers.indicators.Indicator
 import stockcharts.models.Price
+import stockcharts.simulation.enrichers.indicators.Indicator
 
 import scala.language.postfixOps
 
