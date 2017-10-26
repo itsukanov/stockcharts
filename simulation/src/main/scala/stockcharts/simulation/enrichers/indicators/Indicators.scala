@@ -24,7 +24,7 @@ object RSIIndicator {
 
   def apply(period: Int) = new Indicator(
     maximumTickCount = period,
-    indicatorMaker = series => new eu.verdelhan.ta4j.indicators.RSIIndicator(new ClosePriceIndicator(series), period),
+    indicatorMaker = series => new eu.verdelhan.ta4j.indicators.SmoothedRSIIndicator(new ClosePriceIndicator(series), period),
     converter = (price: Price, decimal: Decimal) => RSIValue(price.date, decimal.toDouble)
   )
 
