@@ -8,7 +8,7 @@ import stockcharts.json.JsonConverting
 import stockcharts.kafka.{KafkaSource, OffsetReset}
 import stockcharts.models.{Money, Price, SimulationConf}
 import stockcharts.simulation.enrichers.indicators.{IndicatorsSupport, RSIIndicator}
-import stockcharts.simulation.uisupport.UIModel
+import stockcharts.simulation.uisupport.{UIIndicatorValue, UIModel, UIPrice}
 
 object SimulationFactory {
   import stockcharts.simulation.uisupport.UIConverters._
@@ -25,13 +25,12 @@ object SimulationFactory {
 
       val toRSI = IndicatorsSupport.calculating(RSIIndicator(rsiPeriod))
 
-      val priceCachedStage = b.add(Broadcast[Price](2))
       val uiModels = b.add(Merge[UIModel](2))
-
+      val priceCachedStage = b.add(Broadcast[Price](2))
       prices ~> priceCachedStage.in
 
-      priceCachedStage.out(0).map(x => toUIModel(x))          ~> uiModels.in(0) // uiPrices
-      priceCachedStage.out(1) ~> toRSI.map(x => toUIModel(x)) ~> uiModels.in(1) // uiIndicatorValues
+      priceCachedStage.out(0)           ~> toUI[UIPrice]          ~> uiModels.in(0)  // uiPrices
+      priceCachedStage.out(1) ~> toRSI  ~> toUI[UIIndicatorValue] ~> uiModels.in(1)  // uiIndicatorValues
 
       SourceShape(uiModels.out)
     })

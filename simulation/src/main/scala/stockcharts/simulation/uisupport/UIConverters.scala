@@ -1,5 +1,6 @@
 package stockcharts.simulation.uisupport
 
+import akka.stream.scaladsl.Flow
 import stockcharts.models.{Money, Price}
 import stockcharts.simulation.enrichers.indicators.RSIValue
 
@@ -11,8 +12,13 @@ trait UIConverter[From, To <: UIModel] {
 
 object UIConverters {
 
-  def toUIModel[From, To <: UIModel](from: From)(implicit converter: UIConverter[From, To]) =
-    converter.convert(from)
+  class TypeHolder[T]
+  def toUI[To <: UIModel] = new TypeHolder[To]
+
+  implicit def holder2Flow[From, To <: UIModel](th: TypeHolder[To])
+                                               (implicit converter: UIConverter[From, To]): Flow[From, To, _] =
+    Flow[From].map(converter.convert)
+
 
   implicit def money2Double(money: Money): Double = money.cents.toDouble / 100
 
