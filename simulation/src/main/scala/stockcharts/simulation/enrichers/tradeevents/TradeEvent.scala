@@ -6,7 +6,7 @@ import stockcharts.models.{Money, Price}
 case class Account(balance: Money, equity: Money)
 
 case class TickIn(price: Price, tradeSignal: Option[TradeSignal])
-case class TickOut(account: Account, events: List[TradeEvent])
+case class TickOut(price: Price, account: Account, events: List[TradeEvent])
 
 trait TradeEvent
 object TradeEvent {

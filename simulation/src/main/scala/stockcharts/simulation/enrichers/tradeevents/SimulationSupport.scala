@@ -1,11 +1,12 @@
-package stockcharts.simulation.enrichers.tradesignals
+package stockcharts.simulation.enrichers.tradeevents
 
+import akka.NotUsed
 import akka.actor.{ActorRefFactory, PoisonPill}
 import akka.pattern.ask
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.Flow
 import akka.util.Timeout
-import stockcharts.simulation.enrichers.tradeevents.{AccountManagerFactory, Order, OrderType, TickIn, TickOut}
 import stockcharts.models.{Money, Price}
+import stockcharts.simulation.enrichers.tradesignals.TradeSignal
 
 object SimulationSupport {
 
@@ -19,13 +20,12 @@ object SimulationSupport {
     }
   }
 
-  def calculateAccountChanges[Mat](ticks: Source[TickIn, Mat],
-                                   accountManagerFactory: AccountManagerFactory)
-                                  (implicit arf: ActorRefFactory, to: Timeout): Source[TickOut, Mat] = {
+  def calculateAccountChanges(accountManagerFactory: AccountManagerFactory)
+          (implicit arf: ActorRefFactory, to: Timeout): Flow[TickIn, TickOut, NotUsed] = {
     import arf.dispatcher
     val accManager = arf.actorOf(accountManagerFactory.props)
 
-    ticks
+    Flow[TickIn]
       .mapAsync(1)(tick => accManager ? tick)
       .map(_.asInstanceOf[TickOut])
       .watchTermination() { case (mat, futureDone) =>

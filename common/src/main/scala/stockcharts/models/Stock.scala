@@ -30,7 +30,7 @@ object Stock {
 
 case class SimulationConf(simulationId: String,
                           stock: Stock,
-                          rsiBuy: Double,
-                          rsiSell: Double,
+                          overbought: Double,
+                          oversold: Double,
                           takeProfit: Money,
                           stopLoss: Money)

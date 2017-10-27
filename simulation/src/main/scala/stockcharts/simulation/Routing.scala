@@ -23,8 +23,8 @@ object Routing {
 
   private def tryParseConf(confAsStr: String) = {
     case class SimulationRequest(stock: String,
-                                 rsiBuy: Double,
-                                 rsiSell: Double,
+                                 overbought: Double,
+                                 oversold: Double,
                                  takeProfit: Double,
                                  stopLoss: Double)
 
@@ -33,7 +33,7 @@ object Routing {
       val stock = Stocks.getById(request.stock).getOrElse(throw new IllegalArgumentException("invalid stockId"))
 
       SimulationConf(
-        simulationId = UUID.randomUUID().toString, stock, request.rsiBuy, request.rsiSell,
+        simulationId = UUID.randomUUID().toString, stock, request.overbought, request.oversold,
         takeProfit = Money(request.takeProfit * 100 toLong), stopLoss = Money(request.stopLoss * 100 toLong))
     }
   }

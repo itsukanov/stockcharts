@@ -30,6 +30,7 @@
         <appender-ref ref="FILE"/>
     </root>
 
-    <logger name="stockcharts" level="debug" />
+    <logger name="stockcharts" level="debug"/>
+    <logger name="eu.verdelhan.ta4j.indicators.SmoothedRSIIndicator" level="error"/>
 
 </configuration>
