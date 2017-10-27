@@ -1,7 +1,7 @@
 package stockcharts.simulation.enrichers.tradesignals
 
 import akka.stream.scaladsl.Source
-import stockcharts.simulation.enrichers.{NumericStreamsSupport, StockchartsTest}
+import stockcharts.simulation.enrichers.StockchartsTest
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -10,7 +10,7 @@ import scala.language.postfixOps
 class TradeSignalsStrategyTest extends StockchartsTest {
 
   "OverBoughtSoldStrategy" should "give right trade signals" in {
-    import NumericStreamsSupport._
+    import TradeSignalsSupport._
 
     val overBoughtLevel = 7
     val overSoldLevel = 3
@@ -25,7 +25,7 @@ class TradeSignalsStrategyTest extends StockchartsTest {
     ).unzip
 
     val signalsCalculating = Source(values)
-      .calculateTradeSignals(OverBoughtSoldStrategy(overBoughtLevel, overSoldLevel))
+      .via(calculateTradeSignals(OverBoughtSoldStrategy(overBoughtLevel, overSoldLevel)))
       .toList
 
     val signals = Await.result(signalsCalculating, 3 seconds)

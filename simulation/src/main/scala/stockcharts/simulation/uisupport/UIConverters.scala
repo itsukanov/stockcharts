@@ -3,6 +3,7 @@ package stockcharts.simulation.uisupport
 import akka.stream.scaladsl.Flow
 import stockcharts.models.{Money, Price}
 import stockcharts.simulation.enrichers.indicators.RSIValue
+import stockcharts.simulation.enrichers.tradeevents.TickOut
 
 import scala.language.implicitConversions
 
@@ -28,6 +29,10 @@ object UIConverters {
 
   implicit val rsiConverter = new UIConverter[RSIValue, UIIndicatorValue] {
     override def convert(from: RSIValue): UIIndicatorValue = UIIndicatorValue(from.date, from.value)
+  }
+
+  implicit val accountConverter = new UIConverter[TickOut, UIAccount] {
+    override def convert(from: TickOut): UIAccount = UIAccount(from.price.date, from.account.balance, from.account.equity)
   }
 
 }

@@ -2,7 +2,7 @@ package stockcharts.simulation.enrichers.tradeevents
 
 import akka.stream.scaladsl.Source
 import stockcharts.simulation.enrichers.StockchartsTest
-import stockcharts.simulation.enrichers.tradesignals.SimulationSupport._
+import SimulationSupport._
 import stockcharts.simulation.enrichers.tradesignals.TradeSignal
 import stockcharts.models.{Money, Price}
 
@@ -34,7 +34,7 @@ class TradeEventsTest extends StockchartsTest {
     )
 
     val calculatedEvents = Await.result(
-      calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
+      Source(ticks).via(calculateAccountChanges(accManagerFactory)).toList, Duration.Inf)
       .map(_.events)
 
     val orderIdGen = Iterator.from(1)
@@ -62,7 +62,7 @@ class TradeEventsTest extends StockchartsTest {
     ).unzip
 
     val calculatedAccounts = Await.result(
-      calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
+      Source(ticks).via(calculateAccountChanges(accManagerFactory)).toList, Duration.Inf)
       .map(_.account)
 
     calculatedAccounts shouldBe expectedAccounts
@@ -90,7 +90,7 @@ class TradeEventsTest extends StockchartsTest {
     ).unzip3
 
     val calculatedTicksOut = Await.result(
-      calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
+      Source(ticks).via(calculateAccountChanges(accManagerFactory)).toList, Duration.Inf)
 
     calculatedTicksOut.map(_.account) shouldBe expectedAccounts
 
@@ -118,7 +118,7 @@ class TradeEventsTest extends StockchartsTest {
     ).unzip
 
     val calculatedTicksOut = Await.result(
-      calculateAccountChanges(Source(ticks), accManagerFactory).toList, Duration.Inf)
+      Source(ticks).via(calculateAccountChanges(accManagerFactory)).toList, Duration.Inf)
 
     calculatedTicksOut.map(_.account) zip expectedAccounts foreach { case (calculated, expected) =>
         calculated shouldBe expected
