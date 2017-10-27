@@ -6,8 +6,8 @@ var showNewBarEveryMs = 250;
 
 var id2ParamName = {
     "stock-dropdown": "stock",
-    "rsiBuy": "rsiBuy",
-    "rsiSell": "rsiSell",
+    "overbought": "overbought",
+    "oversold": "oversold",
     "takeProfit": "takeProfit",
     "stopLoss": "stopLoss"
 }
@@ -121,8 +121,8 @@ function getValue(id) {
 function getSimulationConf() {
     return {
         stock: stock2Id.get(getValue("stock-dropdown")),
-        rsiBuy: parseFloat(getValue("rsiBuy")),
-        rsiSell: parseFloat(getValue("rsiSell")),
+        overbought: parseFloat(getValue("overbought")),
+        oversold: parseFloat(getValue("oversold")),
         takeProfit: parseFloat(getValue("takeProfit")),
         stopLoss: parseFloat(getValue("stopLoss"))
     }

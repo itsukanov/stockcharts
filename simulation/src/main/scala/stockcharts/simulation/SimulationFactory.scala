@@ -25,13 +25,13 @@ object SimulationFactory {
 
       val toRSI = IndicatorsSupport.calculating(RSIIndicator(rsiPeriod))
 
-      val priceCache = b.add(Broadcast[Price](2))
+      val priceCachedStage = b.add(Broadcast[Price](2))
       val uiModels = b.add(Merge[UIModel](2))
 
-      prices ~> priceCache.in
+      prices ~> priceCachedStage.in
 
-      priceCache.out(0).map(x => toUIModel(x))          ~> uiModels.in(0) // uiPrices
-      priceCache.out(1) ~> toRSI.map(x => toUIModel(x)) ~> uiModels.in(1) // uiIndicatorValues
+      priceCachedStage.out(0).map(x => toUIModel(x))          ~> uiModels.in(0) // uiPrices
+      priceCachedStage.out(1) ~> toRSI.map(x => toUIModel(x)) ~> uiModels.in(1) // uiIndicatorValues
 
       SourceShape(uiModels.out)
     })
