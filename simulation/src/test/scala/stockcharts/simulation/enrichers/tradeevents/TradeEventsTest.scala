@@ -1,5 +1,7 @@
 package stockcharts.simulation.enrichers.tradeevents
 
+import java.time.LocalDate
+
 import akka.stream.scaladsl.Source
 import stockcharts.simulation.enrichers.StockchartsTest
 import SimulationSupport._
@@ -11,10 +13,9 @@ import scala.concurrent.duration.Duration
 
 class TradeEventsTest extends StockchartsTest {
 
-  var count = 0
+  val counter = Iterator.from(0)
   def price(close: Long) = {
-    count += 1
-    Price(today.plusDays(count), Money.zero, Money.zero, Money.zero, Money(close))
+    Price(today.plusDays(counter.next()), Money.zero, Money.zero, Money.zero, Money(close))
   }
 
   val initBalance = Money(100)
@@ -106,44 +107,32 @@ class TradeEventsTest extends StockchartsTest {
     val stopLoss = 5
     val accManagerFactory = AccountManager(initBalance, constantSizeLotChooser(lotSize), takeProfitStopLossChecker(Money(takeProfit), Money(stopLoss)))
 
-    val (ticks, expectedAccounts) = List(
-      (TickIn(price(10), Some(TradeSignal.OpenBuy)),  Account(Money(90),  Money(100))),
-      (TickIn(price(10 + takeProfit), None),          Account(Money(110), Money(110))),
-      (TickIn(price(20), Some(TradeSignal.OpenBuy)),  Account(Money(90),  Money(110))),
-      (TickIn(price(20 - stopLoss), None),            Account(Money(105), Money(105))),
-      (TickIn(price(15), Some(TradeSignal.OpenSell)), Account(Money(90),  Money(105))),
-      (TickIn(price(15 - takeProfit), None),          Account(Money(115), Money(115))),
-      (TickIn(price(5), Some(TradeSignal.OpenSell)),  Account(Money(110), Money(115))),
-      (TickIn(price(5 + stopLoss), None),             Account(Money(110), Money(110)))
-    ).unzip
+    def price(date: String, close: Long) = Price(LocalDate.parse(date), Money.zero, Money.zero, Money.zero, Money(close))
+
+    def createOrder(id: Long, price: Price, orderType: OrderType) = Order(id, price, orderType, lotSize)
+    def buyOrderOpened(id: Long, openPrice: Price) = TradeEvent.OrderOpened(createOrder(id, openPrice, OrderType.Buy))
+    def sellOrderOpened(id: Long, openPrice: Price) = TradeEvent.OrderOpened(createOrder(id, openPrice, OrderType.Sell))
+    def buyOrderClosed(id: Long, openPrice: Price, closePrice: Price) = TradeEvent.OrderClosed(createOrder(id, openPrice, OrderType.Buy), closePrice)
+    def sellOrderClosed(id: Long, openPrice: Price, closePrice: Price) = TradeEvent.OrderClosed(createOrder(id, openPrice, OrderType.Sell), closePrice)
+
+    val (ticks, expectedAccounts, expectedEvents) = List( // todo simplify expectedEvents checking
+      (TickIn(price("2012-05-01", 10), Some(TradeSignal.OpenBuy)),  Account(Money(90),  Money(100)), List(buyOrderOpened(1L, price("2012-05-01", 10)))),
+      (TickIn(price("2012-05-02", 10 + takeProfit), None),          Account(Money(110), Money(110)), List(buyOrderClosed(1L, price("2012-05-01", 10), price("2012-05-02", 10 + takeProfit)))),
+      (TickIn(price("2012-05-03", 20), Some(TradeSignal.OpenBuy)),  Account(Money(90),  Money(110)), List(buyOrderOpened(2L, price("2012-05-03", 20)))),
+      (TickIn(price("2012-05-04", 20 - stopLoss), None),            Account(Money(105), Money(105)), List(buyOrderClosed(2L, price("2012-05-03", 20), price("2012-05-04", 20 - stopLoss)))),
+      (TickIn(price("2012-05-05", 15), Some(TradeSignal.OpenSell)), Account(Money(90),  Money(105)), List(sellOrderOpened(3L, price("2012-05-05", 15)))),
+      (TickIn(price("2012-05-06", 15 - takeProfit), None),          Account(Money(115), Money(115)), List(sellOrderClosed(3L, price("2012-05-05", 15), price("2012-05-06", 15 - takeProfit)))),
+      (TickIn(price("2012-05-07", 5), Some(TradeSignal.OpenSell)),  Account(Money(110), Money(115)), List(sellOrderOpened(4L, price("2012-05-07", 5)))),
+      (TickIn(price("2012-05-08", 5 + stopLoss), None),             Account(Money(110), Money(110)), List(sellOrderClosed(4L, price("2012-05-07", 5), price("2012-05-08", 5 + stopLoss))))
+    ).unzip3
 
     val calculatedTicksOut = Await.result(
       Source(ticks).via(calculateAccountChanges(accManagerFactory)).toList, Duration.Inf)
-
     calculatedTicksOut.map(_.account) zip expectedAccounts foreach { case (calculated, expected) =>
         calculated shouldBe expected
     }
 
-    def addOrderClosedEvents(openEvents: List[List[TradeEvent.OrderOpened]]) = {
-      def impl(acc: List[List[TradeEvent]], rest: List[List[TradeEvent.OrderOpened]]): List[List[TradeEvent]] =
-        rest match {
-          case Nil => acc
-          case x :: xs => x match {
-            case Nil => impl(acc, xs)
-            case event@List(TradeEvent.OrderOpened(order)) =>
-              impl(acc :+ event :+ List(TradeEvent.OrderClosed(order)), xs)
-          }
-        }
-
-      impl(Nil, openEvents)
-    }
-
-    val eventGen = makeOrderOpenedEventsGen
-    val expectedOrderOpenedEvents = ticks
-      .map(tick => eventGen(tick.price, tick.tradeSignal, true))
-    val expectedEvents = addOrderClosedEvents(expectedOrderOpenedEvents)
     val calculatedEvents = calculatedTicksOut.map(_.events)
-
     calculatedEvents zip expectedEvents foreach { case (calculated, expected) =>
       calculated shouldBe expected
     }

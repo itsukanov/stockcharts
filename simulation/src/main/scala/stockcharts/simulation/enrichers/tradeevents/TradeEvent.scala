@@ -11,7 +11,7 @@ case class TickOut(price: Price, account: Account, events: List[TradeEvent])
 trait TradeEvent
 object TradeEvent {
   case class OrderOpened(order: Order) extends TradeEvent
-  case class OrderClosed(order: Order) extends TradeEvent
+  case class OrderClosed(order: Order, closePrice: Price) extends TradeEvent
 }
 
 case class Order(id: Long, price: Price, orderType: OrderType, size: Int) {

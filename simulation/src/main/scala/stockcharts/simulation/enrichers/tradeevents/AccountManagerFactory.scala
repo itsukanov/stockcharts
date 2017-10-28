@@ -71,7 +71,8 @@ class AccountManager(initialBalance: Money,
       context.become(withState(newAccState, newOpenOrders))
 
       sender() ! TickOut(currentPrice, newAccState,
-        events = justClosedOrders.map(TradeEvent.OrderClosed) ++ justOpenedOrders.map(TradeEvent.OrderOpened))
+        events = justClosedOrders.map(order => TradeEvent.OrderClosed(order, currentPrice))
+          ++ justOpenedOrders.map(TradeEvent.OrderOpened))
   }
 
 }
