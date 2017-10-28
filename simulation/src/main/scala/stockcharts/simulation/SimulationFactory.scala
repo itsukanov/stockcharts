@@ -2,7 +2,7 @@ package stockcharts.simulation
 
 import akka.actor.ActorSystem
 import akka.stream.SourceShape
-import akka.stream.scaladsl.{Broadcast, GraphDSL, Merge, Sink, Source, Zip}
+import akka.stream.scaladsl.{Broadcast, GraphDSL, Merge, Source, Zip}
 import akka.util.Timeout
 import stockcharts.json.JsonConverting
 import stockcharts.kafka.{KafkaSource, OffsetReset}
@@ -11,7 +11,7 @@ import stockcharts.simulation.enrichers.indicators.{IndicatorsSupport, RSIIndica
 import stockcharts.simulation.enrichers.tradeevents.{AccountManager, TickIn, TickOut}
 import stockcharts.simulation.enrichers.tradeevents.SimulationSupport._
 import stockcharts.simulation.enrichers.tradesignals.{OverBoughtSoldStrategy, TradeSignal}
-import stockcharts.simulation.uisupport.{UIAccount, UIIndicatorValue, UIModel, UIPrice}
+import stockcharts.simulation.uisupport.{UIAccount, UIIndicatorValue, UIModel, UIPrice, UITradeEvent}
 
 object SimulationFactory {
   import stockcharts.simulation.enrichers.tradesignals.TradeSignalsSupport.calculateTradeSignals
@@ -29,7 +29,7 @@ object SimulationFactory {
 
       val toRSI = IndicatorsSupport.calculating(RSIIndicator(rsiPeriod))
 
-      val uiModels = b.add(Merge[UIModel](3))
+      val uiModels = b.add(Merge[UIModel](4))
       val priceCachedStage = b.add(Broadcast[Price](3))
       val rsiCachedStage = b.add(Broadcast[RSIValue](2))
 
@@ -57,7 +57,7 @@ object SimulationFactory {
         .via(calculateAccountChanges(accountManager)) ~> cachedTicksOut.in
 
       cachedTicksOut.out(0) ~> toUI[UIAccount] ~> uiModels // uiAccounts
-      cachedTicksOut.out(1) ~> Sink.ignore  // todo implement uiTradeEvents
+      cachedTicksOut.out(1).mapConcat(_.events) ~> toUI[UITradeEvent] ~> uiModels // uiTradeEvents
 
       SourceShape(uiModels.out)
     })

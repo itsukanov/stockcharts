@@ -454,17 +454,17 @@ function clearAllDataFromServer() {
     receivedFromServerCount = 0;
 }
 
-function addOrderEvent(order) {
+function addTradeEvent(order) {
     var event;
     if (order.closeDate) {
-        if (order.type == "buy") {
+        if (order.orderType == "buy") {
           event = closeBuyEvent(order);
         } else {
           event = closeSellEvent(order);
         }
         addOrderLine(order);
     } else {
-        if (order.type == "buy") {
+        if (order.orderType == "buy") {
           event = openBuyEvent(order);
         } else {
           event = openSellEvent(order);
@@ -484,7 +484,7 @@ function addOrderLine(order) {
     lastOrderLineId = lastOrderLineId + 1;
 
     trendLines.push({
-        "id": "tl" + lastOrderLineId,
+        "id": "t1",
         "initialDate": initialDate,
         "finalDate": finalDate,
         "initialValue": order.openPrice,
@@ -537,6 +537,9 @@ function processWsEvent(chartUpdating) {
         break;
       case 'IndicatorValue':
         indicatorData.push(newData);
+        break;
+      case 'TradeEvent':
+        addTradeEvent(newData);
         break;
       case 'Account':
         newData.equity = undefined;
