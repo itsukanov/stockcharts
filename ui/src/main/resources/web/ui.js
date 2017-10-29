@@ -146,8 +146,8 @@ function startProgressBarUpdating() {
     $(".progress-bar").show();
 
     progressBarUpdating = setInterval(function () {
-        if (receivedFromServerCount > 0) {
-            var percentDone = (priceData.length / receivedFromServerCount * 100).toFixed(2);
+        if (pricesFromServerCount > 0) {
+            var percentDone = (priceData.length / pricesFromServerCount * 100).toFixed(2);
             var percents = percentDone + "%";
             $(".progress-bar").css("width", percents).text(percents);
         }
@@ -473,7 +473,7 @@ function clearAllDataFromServer() {
     AmCharts.clear();
     chart = createChart();
     chartWasRendered = false;
-    receivedFromServerCount = 0;
+    pricesFromServerCount = 0;
 }
 
 function addTradeEvent(order) {
@@ -526,11 +526,13 @@ function initWebSocket(wsUri) {
   return ws;
 }
 
-var receivedFromServerCount = 0;
+var pricesFromServerCount = 0;
 function saveData(wsEvent) {
     logData("Received data from server:\n" + wsEvent.data);
     allDataFromServer.push(wsEvent.data);
-    receivedFromServerCount = receivedFromServerCount + 1;
+    if (JSON.parse(wsEvent.data).type == "Price") {
+      pricesFromServerCount = pricesFromServerCount + 1;
+    }
 }
 
 var chartWasRendered = false;
