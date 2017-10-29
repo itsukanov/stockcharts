@@ -4,23 +4,24 @@ organization := "com.itsukanov"
 
 scalaVersion in ThisBuild := "2.12.3"
 
-val root = project.in(file("."))
+lazy val root = project.in(file("."))
+  .aggregate(extractor, simulation, ui, kafka)
 
-val common = project.in(file("common"))
+lazy val common = project.in(file("common"))
   .settings(commonDeps)
 
-val extractor = project.in(file("extractor"))
+lazy val extractor = project.in(file("extractor"))
   .dependsOn(common)
   .settings(extractorDeps)
 
-val simulation = project.in(file("simulation"))
+lazy val simulation = project.in(file("simulation"))
   .dependsOn(common)
   .settings(simulationDeps)
 
-val ui = project.in(file("ui"))
+lazy val ui = project.in(file("ui"))
   .dependsOn(common)
   .settings(uiDeps)
 
-val kafka = project.in(file("kafka"))
+lazy val kafka = project.in(file("kafka"))
   .dependsOn(common)
   .settings(kafkaDeps)
