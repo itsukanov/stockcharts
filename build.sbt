@@ -9,9 +9,9 @@ val root = project.in(file("."))
 val common = project.in(file("common"))
   .settings(commonDeps)
 
-val `external-source-extractor` = project.in(file("external-source-extractor"))
+val extractor = project.in(file("extractor"))
   .dependsOn(common)
-  .settings(externalSourceExtractorDeps)
+  .settings(extractorDeps)
 
 val simulation = project.in(file("simulation"))
   .dependsOn(common)
