@@ -406,6 +406,12 @@ var order4 = {
     type: "sell"
 };
 
+function formatProfit(balanceChange) {
+    var formatted = balanceChange.toFixed(2);
+    if (balanceChange >= 0) return "+$" + formatted;
+    else return "-$" + ( - formatted);
+}
+
 function openBuyEvent(order) {
     return {
         "date": order.openDate,
@@ -426,7 +432,7 @@ function closeBuyEvent(order) {
         "rollOverColor": "red",
         "graph": "g1",
         "showAt": "close",
-        "description": "Closed 'buy' order#" + order.id + ". Balance change " + order.balanceChange
+        "description": "Closed 'buy' order#" + order.id + ". Profit " + formatProfit(order.balanceChange)
       }
 }
 
@@ -450,7 +456,7 @@ function closeSellEvent(order) {
         "rollOverColor": "blue",
         "graph": "g1",
         "showAt": "close",
-        "description": "Closed 'sell' order#" + order.id + ". Balance change " + order.balanceChange
+        "description": "Closed 'sell' order#" + order.id + ". Profit " + formatProfit(order.balanceChange)
       }
 }
 
@@ -552,6 +558,7 @@ function processWsEvent(chartUpdating) {
         priceData.push(newData);
         break;
       case 'IndicatorValue':
+        newData.indicatorValue = newData.indicatorValue.toFixed(2);
         indicatorData.push(newData);
         break;
       case 'TradeEvent':

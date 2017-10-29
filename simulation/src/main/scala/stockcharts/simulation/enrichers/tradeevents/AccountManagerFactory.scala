@@ -46,33 +46,41 @@ class AccountManager(initialBalance: Money,
     .map(order => BigDecimal(order.openPrice) * BigDecimal(order.size))
     .sum
 
-  def potentialProfit(openOrders: List[Order], currentPrice: Price) = openOrders.map { order =>
+  def potentialBalanceChange(orders: List[Order], currentPrice: Price) = {
+    val openingCost = orders.map(_.openPrice).sum
+    val changesFromOrders = potentialOrderProfits(orders, currentPrice).sum
+    openingCost + changesFromOrders
+  }
+
+  def potentialOrderProfits(orders: List[Order], currentPrice: Price) = orders.map { order =>
     val diff = (BigDecimal(currentPrice.close.cents) - BigDecimal(order.openPrice)) * BigDecimal(order.size)
     order.orderType match {
-      case OrderType.Buy => order.openPrice + diff
-      case OrderType.Sell => order.openPrice - diff
+      case OrderType.Buy => diff
+      case OrderType.Sell => - diff
     }
-  }.sum
+  }
 
   override def receive: Receive = withState(Account(initialBalance, equity = Money.zero), List.empty[Order])
 
   def withState(previousAccState: Account, previousOpenOrders: List[Order]): Receive = {
-    case tickIn @ TickIn(currentPrice, signalOption) =>
+    case tickIn @ TickIn(currentPrice, signalOption) => // todo simplify calculations
       val (justClosedOrders, stillOpen) = previousOpenOrders.partition(order => isOrderReadyToClose(order, currentPrice))
-      val moneyFromClosedOrders = potentialProfit(justClosedOrders, currentPrice)
+      val changesFromClosedOrders = potentialBalanceChange(justClosedOrders, currentPrice)
       val justOpenedOrders = openNewOrders(tickIn, balance =
-        previousAccState.balance + Money(moneyFromClosedOrders.toLong))
+        previousAccState.balance + Money(changesFromClosedOrders.toLong))
 
       val newOpenOrders = stillOpen ++ justOpenedOrders
-      val newBalance = previousAccState.balance.cents + moneyFromClosedOrders - moneyForOpeningOrders(justOpenedOrders)
-      val newEquity = newBalance + potentialProfit(newOpenOrders, currentPrice)
+      val newBalance = previousAccState.balance.cents + changesFromClosedOrders - moneyForOpeningOrders(justOpenedOrders)
+      val newEquity = newBalance + potentialBalanceChange(newOpenOrders, currentPrice)
       val newAccState = Account(Money(newBalance.toLong), Money(newEquity.toLong))
 
       context.become(withState(newAccState, newOpenOrders))
-
+      val orderClosedEvents = justClosedOrders zip potentialOrderProfits(justClosedOrders, currentPrice) map {
+        case (order, balanceChange) =>
+          TradeEvent.OrderClosed(order, currentPrice, Money(balanceChange.toLong))
+      }
       sender() ! TickOut(currentPrice, newAccState,
-        events = justClosedOrders.map(order => TradeEvent.OrderClosed(order, currentPrice))
-          ++ justOpenedOrders.map(TradeEvent.OrderOpened))
+        events = orderClosedEvents ++ justOpenedOrders.map(TradeEvent.OrderOpened))
   }
 
 }

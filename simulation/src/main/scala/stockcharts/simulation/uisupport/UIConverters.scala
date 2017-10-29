@@ -42,13 +42,13 @@ object UIConverters {
   implicit val tradeEventsConverter = new UIConverter[TradeEvent, UITradeEvent] {
     override def convert(from: TradeEvent): UITradeEvent = from match {
       case TradeEvent.OrderOpened(order) => UITradeEvent.UIOrderOpened(order.id, openDate = order.price.date, order.orderType)
-      case TradeEvent.OrderClosed(order, closePrice) => UITradeEvent.UIOrderClosed(
+      case TradeEvent.OrderClosed(order, closePrice, balanceChange) => UITradeEvent.UIOrderClosed(
         id = order.id,
         openDate = order.price.date,
         closeDate = closePrice.date,
         openPrice = order.price.close,
         closePrice = closePrice.close,
-        balanceChange = 42,
+        balanceChange = balanceChange,
         orderType = order.orderType)
     }
   }
