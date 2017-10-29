@@ -21,6 +21,6 @@ val ui = project.in(file("ui"))
   .dependsOn(common)
   .settings(uiDeps)
 
-val `embedded-kafka` = project.in(file("embedded-kafka"))
+val kafka = project.in(file("kafka"))
   .dependsOn(common)
   .settings(kafkaDeps)
