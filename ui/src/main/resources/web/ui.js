@@ -25,6 +25,7 @@ var balanceData = [];
 var equityData = [];
 var stockEvents = [];
 var trendLines = [];
+var indicatorLevels = [];
 
 $(function(){
      initStockList();
@@ -43,6 +44,17 @@ function initStartBtn() {
     $("#start-btn").off().click(startBtnHandler);
 }
 
+function drawIndicatorLevels() {
+    var simulationConf = getSimulationConf();
+    indicatorLevels.push({
+      "value": simulationConf.overbought,
+      "lineColor": "#db4c3c"
+    }, {
+      "value": simulationConf.oversold,
+      "lineColor": "#db4c3c"
+    });
+}
+
 var skipAnimation = false;
 var isChartWithOldData = false;
 function startBtnHandler() {
@@ -54,6 +66,7 @@ function startBtnHandler() {
     } else {
       isChartWithOldData = true;
     }
+    drawIndicatorLevels();
 
     function sendSimulationConf() {
         var simulationConf = getSimulationConf();
@@ -248,6 +261,8 @@ function createChart() {
                   "columnWidth": 0.6,
                   "recalculateToPercents": "never",
                   "showCategoryAxis": false,
+
+                  "guides": indicatorLevels,
 
                   "stockGraphs": [ {
                     "type": "line",
@@ -447,6 +462,7 @@ function clearAllDataFromServer() {
     equityData = [];
     stockEvents = [];
     trendLines = [];
+    indicatorLevels = [];
 
     AmCharts.clear();
     chart = createChart();
