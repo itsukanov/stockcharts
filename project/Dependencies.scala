@@ -21,7 +21,7 @@ object Dependencies {
     "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
   )
 
-  val externalSourceExtractorDeps = libraryDependencies ++= Seq(
+  val extractorDeps = libraryDependencies ++= Seq(
     akkaHttp
   )
 
