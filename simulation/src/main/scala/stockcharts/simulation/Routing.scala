@@ -8,9 +8,8 @@ import akka.stream.scaladsl.{Flow, Source}
 import org.json4s.native.JsonMethods._
 import org.slf4j.LoggerFactory
 import stockcharts.Config.Stocks
-import stockcharts.json.JsonConverting
 import stockcharts.models.{Money, SimulationConf}
-import stockcharts.simulation.uisupport.UIModel
+import stockcharts.simulation.uisupport.{SimulationDone, UIModel}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -38,9 +37,6 @@ object Routing {
     }
   }
 
-  private case class SystemMessage(`type`: String)
-  private val done = JsonConverting.toJson(SystemMessage("Simulation done"))
-
   def wsCommandHandler(simulationFactory: SimulationConf => Source[UIModel, _],
                        uiSerializer: Flow[UIModel, String, _]) =
     Flow[Message].flatMapConcat {
@@ -48,14 +44,14 @@ object Routing {
         tryParseConf(confAsStr) match {
           case Success(conf) =>
             val simulation = simulationFactory(conf)
-              .via(uiSerializer)
               .idleTimeout(5 seconds)
               .recover {
-                case ex: scala.concurrent.TimeoutException => done
+                case ex: scala.concurrent.TimeoutException => SimulationDone()
                 case thr =>
                   log.error("Error during simulation", thr)
                   throw thr
-              }.map(TextMessage.apply)
+              }.via(uiSerializer)
+              .map(TextMessage.apply)
 
             log.debug(s"Trade simulation for $conf has been created")
             simulation

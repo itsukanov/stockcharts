@@ -16,7 +16,7 @@ object JsonConverting {
 
   implicit val formats = org.json4s.DefaultFormats + new LocalDateSerializer
 
-  def toJson(a: Any) = compact(render(Extraction.decompose(a)))
+  def toJson(a: Any) = compact(render(Extraction.decompose(a))) // type Any came from `Extraction.decompose` todo find another api or remove json4s library
 
   val toJsonFlow = Flow.fromFunction(toJson)
 
