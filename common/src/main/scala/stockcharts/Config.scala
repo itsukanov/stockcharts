@@ -63,13 +63,10 @@ object Config {
     val serverUrl = s"$host:$port"
 
     object Topics {
+      val stockPartitions = conf.getInt("kafka.topics.stock-partitions")
+      val stocks = Stocks.all.map(stock => KafkaTopic(stock.topic, stockPartitions))
 
-      val userCommands = KafkaTopic(
-        conf.getString("kafka.topics.user-commands.name"),
-        conf.getInt("kafka.topics.user-commands.partitions")
-      )
-
-      val all = Seq(userCommands)
+      val all = stocks
     }
 
     val properties = conf.as[Map[String, String]]("kafka.properties")
