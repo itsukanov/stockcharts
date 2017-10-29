@@ -112,18 +112,20 @@ class TradeEventsTest extends StockchartsTest {
     def createOrder(id: Long, price: Price, orderType: OrderType) = Order(id, price, orderType, lotSize)
     def buyOrderOpened(id: Long, openPrice: Price) = TradeEvent.OrderOpened(createOrder(id, openPrice, OrderType.Buy))
     def sellOrderOpened(id: Long, openPrice: Price) = TradeEvent.OrderOpened(createOrder(id, openPrice, OrderType.Sell))
-    def buyOrderClosed(id: Long, openPrice: Price, closePrice: Price) = TradeEvent.OrderClosed(createOrder(id, openPrice, OrderType.Buy), closePrice)
-    def sellOrderClosed(id: Long, openPrice: Price, closePrice: Price) = TradeEvent.OrderClosed(createOrder(id, openPrice, OrderType.Sell), closePrice)
+    def buyOrderClosed(id: Long, openPrice: Price, closePrice: Price, balanceChange: Money) =
+      TradeEvent.OrderClosed(createOrder(id, openPrice, OrderType.Buy), closePrice, balanceChange)
+    def sellOrderClosed(id: Long, openPrice: Price, closePrice: Price, balanceChange: Money) =
+      TradeEvent.OrderClosed(createOrder(id, openPrice, OrderType.Sell), closePrice, balanceChange)
 
     val (ticks, expectedAccounts, expectedEvents) = List( // todo simplify expectedEvents checking
       (TickIn(price("2012-05-01", 10), Some(TradeSignal.OpenBuy)),  Account(Money(90),  Money(100)), List(buyOrderOpened(1L, price("2012-05-01", 10)))),
-      (TickIn(price("2012-05-02", 10 + takeProfit), None),          Account(Money(110), Money(110)), List(buyOrderClosed(1L, price("2012-05-01", 10), price("2012-05-02", 10 + takeProfit)))),
+      (TickIn(price("2012-05-02", 10 + takeProfit), None),          Account(Money(110), Money(110)), List(buyOrderClosed(1L, price("2012-05-01", 10), price("2012-05-02", 10 + takeProfit), Money(takeProfit)))),
       (TickIn(price("2012-05-03", 20), Some(TradeSignal.OpenBuy)),  Account(Money(90),  Money(110)), List(buyOrderOpened(2L, price("2012-05-03", 20)))),
-      (TickIn(price("2012-05-04", 20 - stopLoss), None),            Account(Money(105), Money(105)), List(buyOrderClosed(2L, price("2012-05-03", 20), price("2012-05-04", 20 - stopLoss)))),
+      (TickIn(price("2012-05-04", 20 - stopLoss), None),            Account(Money(105), Money(105)), List(buyOrderClosed(2L, price("2012-05-03", 20), price("2012-05-04", 20 - stopLoss), Money(-stopLoss)))),
       (TickIn(price("2012-05-05", 15), Some(TradeSignal.OpenSell)), Account(Money(90),  Money(105)), List(sellOrderOpened(3L, price("2012-05-05", 15)))),
-      (TickIn(price("2012-05-06", 15 - takeProfit), None),          Account(Money(115), Money(115)), List(sellOrderClosed(3L, price("2012-05-05", 15), price("2012-05-06", 15 - takeProfit)))),
+      (TickIn(price("2012-05-06", 15 - takeProfit), None),          Account(Money(115), Money(115)), List(sellOrderClosed(3L, price("2012-05-05", 15), price("2012-05-06", 15 - takeProfit), Money(takeProfit)))),
       (TickIn(price("2012-05-07", 5), Some(TradeSignal.OpenSell)),  Account(Money(110), Money(115)), List(sellOrderOpened(4L, price("2012-05-07", 5)))),
-      (TickIn(price("2012-05-08", 5 + stopLoss), None),             Account(Money(110), Money(110)), List(sellOrderClosed(4L, price("2012-05-07", 5), price("2012-05-08", 5 + stopLoss))))
+      (TickIn(price("2012-05-08", 5 + stopLoss), None),             Account(Money(110), Money(110)), List(sellOrderClosed(4L, price("2012-05-07", 5), price("2012-05-08", 5 + stopLoss), Money(-stopLoss))))
     ).unzip3
 
     val calculatedTicksOut = Await.result(

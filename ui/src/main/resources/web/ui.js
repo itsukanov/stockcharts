@@ -25,6 +25,7 @@ var balanceData = [];
 var equityData = [];
 var stockEvents = [];
 var trendLines = [];
+var indicatorLevels = [];
 
 $(function(){
      initStockList();
@@ -43,6 +44,17 @@ function initStartBtn() {
     $("#start-btn").off().click(startBtnHandler);
 }
 
+function drawIndicatorLevels() {
+    var simulationConf = getSimulationConf();
+    indicatorLevels.push({
+      "value": simulationConf.overbought,
+      "lineColor": "#db4c3c"
+    }, {
+      "value": simulationConf.oversold,
+      "lineColor": "#db4c3c"
+    });
+}
+
 var skipAnimation = false;
 var isChartWithOldData = false;
 function startBtnHandler() {
@@ -54,6 +66,7 @@ function startBtnHandler() {
     } else {
       isChartWithOldData = true;
     }
+    drawIndicatorLevels();
 
     function sendSimulationConf() {
         var simulationConf = getSimulationConf();
@@ -249,6 +262,8 @@ function createChart() {
                   "recalculateToPercents": "never",
                   "showCategoryAxis": false,
 
+                  "guides": indicatorLevels,
+
                   "stockGraphs": [ {
                     "type": "line",
                     "id": "g2",
@@ -391,6 +406,12 @@ var order4 = {
     type: "sell"
 };
 
+function formatProfit(balanceChange) {
+    var formatted = balanceChange.toFixed(2);
+    if (balanceChange >= 0) return "+$" + formatted;
+    else return "-$" + ( - formatted);
+}
+
 function openBuyEvent(order) {
     return {
         "date": order.openDate,
@@ -411,7 +432,7 @@ function closeBuyEvent(order) {
         "rollOverColor": "red",
         "graph": "g1",
         "showAt": "close",
-        "description": "Closed 'buy' order#" + order.id + ". Balance change " + order.balanceChange
+        "description": "Closed 'buy' order#" + order.id + ". Profit " + formatProfit(order.balanceChange)
       }
 }
 
@@ -435,7 +456,7 @@ function closeSellEvent(order) {
         "rollOverColor": "blue",
         "graph": "g1",
         "showAt": "close",
-        "description": "Closed 'sell' order#" + order.id + ". Balance change " + order.balanceChange
+        "description": "Closed 'sell' order#" + order.id + ". Profit " + formatProfit(order.balanceChange)
       }
 }
 
@@ -447,6 +468,7 @@ function clearAllDataFromServer() {
     equityData = [];
     stockEvents = [];
     trendLines = [];
+    indicatorLevels = [];
 
     AmCharts.clear();
     chart = createChart();
@@ -536,6 +558,7 @@ function processWsEvent(chartUpdating) {
         priceData.push(newData);
         break;
       case 'IndicatorValue':
+        newData.indicatorValue = newData.indicatorValue.toFixed(2);
         indicatorData.push(newData);
         break;
       case 'TradeEvent':
