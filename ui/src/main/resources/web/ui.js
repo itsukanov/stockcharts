@@ -10,7 +10,7 @@ var id2ParamName = {
     "oversold": "oversold",
     "takeProfit": "takeProfit",
     "stopLoss": "stopLoss"
-}
+};
 var inputIds = Object.keys(id2ParamName);
 
 var serverUri = "ws://localhost:8081/simulate";
@@ -32,7 +32,7 @@ $(function(){
      initInputs();
      $("#start-btn").click(startBtnHandler);
      chart = createChart();
-})
+});
 
 function initSkipAnimationBtn() {
     $("#start-btn").text("Skip animation").removeClass("btn-primary").addClass("btn-warning");
@@ -372,40 +372,6 @@ function createChart() {
             } );
         }
 
-var order1 = {
-    id: 42,
-    openDate: "2017-09-25",
-    openPrice: 42,
-    type: "buy"
-};
-
-var order2 = {
-    id: 42,
-    openDate: "2017-09-25",
-    openPrice: 42,
-    closePrice: 43,
-    closeDate: "2017-09-27",
-    balanceChange: "+12",
-    type: "buy"
-};
-
-var order3 = {
-    id: 43,
-    openDate: "2017-09-21",
-    openPrice: 44,
-    type: "sell"
-};
-
-var order4 = {
-    id: 43,
-    openDate: "2017-09-21",
-    closeDate: "2017-09-23",
-    openPrice: 44,
-    closePrice: 45,
-    balanceChange: "-23",
-    type: "sell"
-};
-
 function formatProfit(balanceChange) {
     var formatted = balanceChange.toFixed(2);
     if (balanceChange >= 0) return "+$" + formatted;
@@ -495,15 +461,11 @@ function addTradeEvent(order) {
     stockEvents.push(event);
 }
 
-var lastOrderLineId = 0;
 function addOrderLine(order) {
     var initialDate = new Date(order.openDate);
     initialDate.setHours(12);
-
     var finalDate = new Date(order.closeDate);
     finalDate.setHours(12);
-
-    lastOrderLineId = lastOrderLineId + 1;
 
     trendLines.push({
         "id": "t1",
