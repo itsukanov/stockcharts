@@ -2,11 +2,14 @@ package stockcharts.kafka
 
 import kafka.admin.AdminUtils
 import kafka.utils.ZkUtils
+import org.slf4j.LoggerFactory
 import stockcharts.{Config, KafkaTopic}
 
 import scala.util.Try
 
 trait KafkaSupport {
+
+  private val log = LoggerFactory.getLogger(this.getClass)
 
   private val sessionTimeoutMs = 10 * 1000
   private val connectionTimeoutMs = 8 * 1000
@@ -21,6 +24,7 @@ trait KafkaSupport {
   def initTopics(topics: Seq[KafkaTopic]) = withZkUtils { zkUtils =>
     topics.foreach { topic =>
       AdminUtils.createTopic(zkUtils, topic.name, topic.partitions, replicationFactor = 1)
+      log.debug(s"$topic initialized")
     }
   }
 

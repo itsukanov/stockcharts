@@ -30,6 +30,6 @@
         <appender-ref ref="FILE"/>
     </root>
 
-    <logger name="stockcharts" level="info" />
+    <logger name="stockcharts" level="debug" />
 
 </configuration>
