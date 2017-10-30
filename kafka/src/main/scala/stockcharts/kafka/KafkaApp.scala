@@ -21,7 +21,7 @@ object KafkaApp extends App with KafkaSupport {
   initTopics(Kafka.Topics.all) match {
     case Success(_) => log.info("Topics initialization has been successfully done")
     case Failure(thr) =>
-      log.error("Topics initialization has been failed", thr)
+      log.error("Topics initialization has been failed:", thr)
       sys.exit(1)
   }
 

@@ -6,6 +6,8 @@ trait UIModel {
   def `type`: String
 }
 
+case class SimulationDone(`type`: String = "Simulation done") extends UIModel
+
 case class UIPrice(date: LocalDate,
                    open: Double,
                    high: Double,

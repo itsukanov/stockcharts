@@ -1,15 +1,15 @@
-package stockcharts.simulation.enrichers
+package stockcharts
 
 import java.time.LocalDate
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.Source
+import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.Timeout
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers, Suite}
 
-import concurrent.duration._
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.language.postfixOps
 
 trait StockchartsTest extends FlatSpec with Matchers with BeforeAndAfterAll {
