@@ -4,6 +4,8 @@ import com.typesafe.config.ConfigFactory
 import net.ceedubs.ficus.Ficus._
 import stockcharts.models.{Money, Stock}
 
+import scala.concurrent.duration.FiniteDuration
+
 case class KafkaTopic(name: String, partitions: Int, replicationFactor: Int)
 
 object Config {
@@ -12,6 +14,7 @@ object Config {
 
   object StockSources {
     object Quandl {
+      val delayBtwCalls = conf.as[FiniteDuration]("stock-sources.quandl.delay-between-calls")
       val baseUrl = conf.getString("stock-sources.quandl.base-url")
       val apiKey = conf.getString("stock-sources.quandl.api-key")
     }
