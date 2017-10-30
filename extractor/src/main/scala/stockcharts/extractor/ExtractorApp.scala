@@ -1,11 +1,15 @@
 package stockcharts.extractor
 
+import java.util.concurrent.Executors
+
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import org.slf4j.LoggerFactory
 import stockcharts.Config
 import stockcharts.Config.StockSources.Quandl
-import stockcharts.extractor.quandl.QuandlClient
+import stockcharts.extractor.quandl.ThrottledQuandlClient
+
+import scala.concurrent.ExecutionContext
 
 object ExtractorApp extends App {
 
@@ -14,11 +18,12 @@ object ExtractorApp extends App {
   val system = ActorSystem("extractor-app")
   implicit val materializer = ActorMaterializer()(system)
 
-  val quandlClient = new QuandlClient(Quandl.baseUrl, Quandl.apiKey, system)(system.dispatcher, materializer) // todo change actorSystem.dispatcher to another context
+
+  val quandlClient = new ThrottledQuandlClient(Quandl.baseUrl, Quandl.apiKey, Quandl.delayBtwCalls, system)(
+    ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(1)) , materializer)
   val extractorManager = system.actorOf(PricesExtractorManager.props(quandlClient), "prices-extractor-manager")
 
   Config.Stocks.all.foreach { stock =>
-    Thread.sleep(1200) // todo replace with SINGLE throttling inside QuandlClient
     extractorManager ! PricesExtractor.ExtractPricesIfNecessary(stock)
   }
 

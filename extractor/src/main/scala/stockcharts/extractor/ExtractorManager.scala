@@ -7,7 +7,7 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Keep, Source}
 import org.slf4j.LoggerFactory
 import stockcharts.extractor.PricesExtractor.ExtractPricesIfNecessary
-import stockcharts.extractor.quandl.QuandlClient
+import stockcharts.extractor.quandl.ThrottledQuandlClient
 import stockcharts.json.JsonConverting
 import stockcharts.kafka.{KafkaRecords, KafkaSink, KafkaUtils}
 import stockcharts.models.{Stock, StockId}
@@ -24,10 +24,10 @@ object PricesState {
 }
 
 object PricesExtractorManager {
-  def props(client: QuandlClient)(implicit materializer: ActorMaterializer) = Props(new PricesExtractorManager(client))
+  def props(client: ThrottledQuandlClient)(implicit materializer: ActorMaterializer) = Props(new PricesExtractorManager(client))
 }
 
-class PricesExtractorManager(client: QuandlClient)(implicit materializer: ActorMaterializer) extends Actor with Stash {
+class PricesExtractorManager(client: ThrottledQuandlClient)(implicit materializer: ActorMaterializer) extends Actor with Stash {
 
   val log = LoggerFactory.getLogger(this.getClass)
   var stock2Extractor = Map.empty[StockId, ActorRef]
@@ -56,10 +56,10 @@ class PricesExtractorManager(client: QuandlClient)(implicit materializer: ActorM
 object PricesExtractor {
   case class ExtractPricesIfNecessary(stock: Stock)
 
-  def props(client: QuandlClient, stock: Stock)(implicit materializer: ActorMaterializer) = Props(new PricesExtractor(client, stock))
+  def props(client: ThrottledQuandlClient, stock: Stock)(implicit materializer: ActorMaterializer) = Props(new PricesExtractor(client, stock))
 }
 
-class PricesExtractor(client: QuandlClient, stock: Stock)(implicit materializer: ActorMaterializer) extends Actor with Stash {
+class PricesExtractor(client: ThrottledQuandlClient, stock: Stock)(implicit materializer: ActorMaterializer) extends Actor with Stash {
   import context.dispatcher
   implicit val iSystem = context.system
 
