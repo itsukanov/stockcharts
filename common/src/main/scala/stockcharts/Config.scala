@@ -4,7 +4,7 @@ import com.typesafe.config.ConfigFactory
 import net.ceedubs.ficus.Ficus._
 import stockcharts.models.{Money, Stock}
 
-case class KafkaTopic(name: String, partitions: Int)
+case class KafkaTopic(name: String, partitions: Int, replicationFactor: Int)
 
 object Config {
 
@@ -64,7 +64,8 @@ object Config {
 
     object Topics {
       val stockPartitions = conf.getInt("kafka.topics.stock-partitions")
-      val stocks = Stocks.all.map(stock => KafkaTopic(stock.topic, stockPartitions))
+      val stocksReplicationFactor = conf.getInt("kafka.topics.stock-replication-factor")
+      val stocks = Stocks.all.map(stock => KafkaTopic(stock.topic, stockPartitions, stocksReplicationFactor))
 
       val all = stocks
     }

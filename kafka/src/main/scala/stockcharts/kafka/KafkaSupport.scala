@@ -23,7 +23,7 @@ trait KafkaSupport {
 
   def initTopics(topics: Seq[KafkaTopic]) = withZkUtils { zkUtils =>
     topics.foreach { topic =>
-      AdminUtils.createTopic(zkUtils, topic.name, topic.partitions, replicationFactor = 1)
+      AdminUtils.createTopic(zkUtils, topic.name, topic.partitions, topic.replicationFactor)
       log.debug(s"$topic initialized")
     }
   }
