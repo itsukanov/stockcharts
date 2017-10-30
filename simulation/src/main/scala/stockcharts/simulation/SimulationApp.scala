@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory
 import stockcharts.Config.RSIStrategyConf._
 import stockcharts.Config.SimulationAppConf
 import stockcharts.json.JsonConverting
+import stockcharts.kafka.{OffsetReset, PriceSource}
+import stockcharts.models.Stock
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -22,9 +24,16 @@ object SimulationApp extends App {
   implicit val materializer = ActorMaterializer()
   implicit val to = Timeout(3 seconds)
 
-  val binding = Http().bindAndHandle(Routing(
-    simulationFactory = SimulationFactory.simulateTrade(rsiPeriod, initialBalance, lotSize),
-    uiSerializer = JsonConverting.toJsonFlow), SimulationAppConf.host, SimulationAppConf.port)
+  val priceSourceFactory = new PriceSourceFactory {
+    def prices(stock: Stock, groupId: String) = PriceSource(stock.topic, groupId, OffsetReset.Earliest)
+  }
+
+  val routing = new Routing(
+    simulationFactory = new SimulationFactory(rsiPeriod, initialBalance, lotSize).simulateTrade _,
+    priceSourceFactory,
+    uiSerializer = JsonConverting.toJsonFlow)
+
+  val binding = Http().bindAndHandle(routing.route, SimulationAppConf.host, SimulationAppConf.port)
   binding.onComplete {
     case Success(_) => log.info("Rest api binding has been successfully done")
     case Failure(thr) =>

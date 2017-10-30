@@ -1,7 +1,7 @@
 package stockcharts.simulation.enrichers.indicators
 
 import akka.stream.scaladsl.Source
-import stockcharts.simulation.enrichers.StockchartsTest
+import stockcharts.StockchartsTest
 import stockcharts.models.{Money, Price}
 
 import scala.concurrent.Await

@@ -6,6 +6,8 @@ import akka.kafka.{ConsumerSettings, Subscriptions}
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.{ByteArrayDeserializer, StringDeserializer}
 import stockcharts.Config
+import stockcharts.json.JsonConverting
+import stockcharts.models.Price
 
 trait OffsetReset {
   def value: String
@@ -33,5 +35,16 @@ object KafkaSource {
 
     Consumer.committableSource(consumerSettings, Subscriptions.topics(topic))
   }
+
+}
+
+object PriceSource {
+
+  def apply(topic: String,
+            groupId: String,
+            offsetReset: OffsetReset)(implicit system: ActorSystem) =
+    KafkaSource(topic, groupId, offsetReset)
+      .map(_.record.value())
+      .map(JsonConverting.toModel[Price])
 
 }

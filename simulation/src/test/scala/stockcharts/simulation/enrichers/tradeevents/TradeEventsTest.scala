@@ -3,8 +3,8 @@ package stockcharts.simulation.enrichers.tradeevents
 import java.time.LocalDate
 
 import akka.stream.scaladsl.Source
-import stockcharts.simulation.enrichers.StockchartsTest
 import SimulationSupport._
+import stockcharts.StockchartsTest
 import stockcharts.simulation.enrichers.tradesignals.TradeSignal
 import stockcharts.models.{Money, Price}
 
