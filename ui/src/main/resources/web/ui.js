@@ -2,7 +2,8 @@ var logSystemEventsEnabled = true;
 var logDataEnabled = false;
 
 var nbrOfBarsOnChart = 91;
-var showNewBarEveryMs = 250;
+var showNewBarEveryMs = 300;
+var nmbPrices2ShowPerTick = 1;
 
 var id2ParamName = {
     "stock-dropdown": "stock",
@@ -500,11 +501,16 @@ function saveData(wsEvent) {
 var chartWasRendered = false;
 function startChartUpdating() {
     var chartUpdating = setInterval(function() {
+        var processedPrices = 0;
         do {
             if (allDataFromServer.length > 0) {
-                processWsEvent(chartUpdating);
+                var isSignificantEventWasProcessed = processWsEvent(chartUpdating);
+                if (isSignificantEventWasProcessed) {
+                  processedPrices = processedPrices + 1;
+                }
             }
-        } while ((priceData.length < nbrOfBarsOnChart || (skipAnimation && chartWasRendered)) && allDataFromServer.length > 0)
+        } while ((priceData.length < nbrOfBarsOnChart || (skipAnimation && chartWasRendered) || processedPrices < nmbPrices2ShowPerTick)
+                        && allDataFromServer.length > 0)
 
         if (priceData.length >= nbrOfBarsOnChart) {
             chart.validateData(); //call to redraw the chart with new data
@@ -517,9 +523,11 @@ function processWsEvent(chartUpdating) {
     logData("Processing ws event:\n" + wsEvent);
 
     var newData = JSON.parse(wsEvent);
+    var isSignificantEventWasProcessed = false;
     switch (newData.type) {
       case 'Price':
         priceData.push(newData);
+        isSignificantEventWasProcessed = true;
         break;
       case 'IndicatorValue':
         newData.indicatorValue = newData.indicatorValue.toFixed(2);
@@ -542,8 +550,10 @@ function processWsEvent(chartUpdating) {
         log("Simulation done. Chart updating stopped");
         initStartBtn();
         skipAnimation = false;
+        isSignificantEventWasProcessed = true;
         break;
     }
+    return isSignificantEventWasProcessed;
 }
 
 function onConnect(wsEvent) {
