@@ -7,6 +7,7 @@ trait UIModel {
 }
 
 case class SimulationDone(`type`: String = "Simulation done") extends UIModel
+case class InvalidConfig(details: String, `type`: String = "InvalidConfig") extends UIModel
 
 case class UIPrice(date: LocalDate,
                    open: Double,
