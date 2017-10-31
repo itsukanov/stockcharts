@@ -33,4 +33,11 @@ case class SimulationConf(simulationId: String,
                           overbought: Double,
                           oversold: Double,
                           takeProfit: Money,
-                          stopLoss: Money)
+                          stopLoss: Money) {
+  require(oversold > 0,           "oversold must be positive double")
+  require(takeProfit.cents > 0,   "takeProfit must be positive double")
+  require(stopLoss.cents > 0,     "stopLoss must be positive double")
+  require(overbought > 0,         "overbought must be positive double")
+  require(overbought < 100,       "overbought must be < 100")
+  require(overbought > oversold,  "overbought must be > oversold")
+}

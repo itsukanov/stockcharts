@@ -135,10 +135,10 @@ function getValue(id) {
 function getSimulationConf() {
     return {
         stock: stock2Id.get(getValue("stock-dropdown")),
-        overbought: parseFloat(getValue("overbought")),
-        oversold: parseFloat(getValue("oversold")),
-        takeProfit: parseFloat(getValue("takeProfit")),
-        stopLoss: parseFloat(getValue("stopLoss"))
+        overbought: getValue("overbought"),
+        oversold: getValue("oversold"),
+        takeProfit: getValue("takeProfit"),
+        stopLoss: getValue("stopLoss")
     }
 }
 
@@ -545,14 +545,23 @@ function processWsEvent(chartUpdating) {
         equityData.push(copy);
         break;
       case 'Simulation done':
+        simulationDone();
+        break;
+      case 'InvalidConfig':
+        simulationDone();
+        alert(newData.details);
+        break;
+    }
+
+    function simulationDone() {
         clearInterval(chartUpdating);
         stopProgressBarUpdating();
         log("Simulation done. Chart updating stopped");
         initStartBtn();
         skipAnimation = false;
         isSignificantEventWasProcessed = true;
-        break;
     }
+
     return isSignificantEventWasProcessed;
 }
 

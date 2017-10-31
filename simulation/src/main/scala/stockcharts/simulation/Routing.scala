@@ -9,7 +9,7 @@ import org.json4s.native.JsonMethods._
 import org.slf4j.LoggerFactory
 import stockcharts.Config.Stocks
 import stockcharts.models.{Money, Price, SimulationConf, Stock}
-import stockcharts.simulation.uisupport.{SimulationDone, UIModel}
+import stockcharts.simulation.uisupport.{InvalidConfig, SimulationDone, UIModel}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -20,10 +20,10 @@ trait PriceSourceFactory {
 }
 
 case class SimulationRequest(stock: String,
-                             overbought: Double,
-                             oversold: Double,
-                             takeProfit: Double,
-                             stopLoss: Double)
+                             overbought: String,
+                             oversold: String,
+                             takeProfit: String,
+                             stopLoss: String)
 
 class Routing(simulationFactory: SimulationConf => Flow[Price, UIModel, _],
               priceSourceFactory: PriceSourceFactory,
@@ -38,8 +38,8 @@ class Routing(simulationFactory: SimulationConf => Flow[Price, UIModel, _],
       val stock = Stocks.getById(request.stock).getOrElse(throw new IllegalArgumentException("invalid stockId"))
 
       SimulationConf(
-        simulationId = UUID.randomUUID().toString, stock, request.overbought, request.oversold,
-        takeProfit = Money(request.takeProfit * 100 toLong), stopLoss = Money(request.stopLoss * 100 toLong))
+        simulationId = UUID.randomUUID().toString, stock, request.overbought.toDouble, request.oversold.toDouble,
+        takeProfit = Money(request.takeProfit.toDouble * 100 toLong), stopLoss = Money(request.stopLoss.toDouble * 100 toLong))
     }
 
   val wsCommandHandler =
@@ -63,7 +63,10 @@ class Routing(simulationFactory: SimulationConf => Flow[Price, UIModel, _],
 
           case Failure(thr) =>
             log.warn(s"Can't extract simulation conf from '$confAsStr'", thr)
-            Source.single(TextMessage(s"Can't extract simulation conf from '$confAsStr' because of:\n${thr.getMessage}"))
+            Source
+              .single(InvalidConfig(s"Can't extract simulation config from '$confAsStr' because of:\n${thr.toString}"))
+              .via(uiSerializer)
+              .map(TextMessage.apply)
         }
 
       case _ => Source.single(TextMessage("Message unsupported"))
