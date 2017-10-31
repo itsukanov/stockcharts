@@ -140,4 +140,30 @@ class TradeEventsTest extends StockchartsTest {
     }
   }
 
+  it should "make a margin call if sell orders have too much loss" in {
+    val takeProfit = 10
+    val stopLoss = 500
+    val initBalance = Money(100)
+    val accManagerFactory = AccountManager(
+      initBalance,
+      constantSizeLotChooser(lotSize),
+      takeProfitStopLossChecker(Money(takeProfit), Money(stopLoss))
+    )
+
+    val (ticks, expectedAccounts) = List(
+      (TickIn(price(5), Some(TradeSignal.OpenSell)), Account(Money(95), Money(100))),
+      (TickIn(price(10), None),                      Account(Money(95), Money(95))),
+      (TickIn(price(95), None),                      Account(Money(95), Money(10))),
+      (TickIn(price(106), None),                     Account(Money(-1), Money(-1)))
+    ).unzip
+
+    val calculatedAccounts = Await.result(
+      Source(ticks).via(calculateAccountChanges(accManagerFactory)).toList, Duration.Inf)
+      .map(_.account)
+
+    calculatedAccounts zip expectedAccounts foreach { case (calculated, expected) =>
+      calculated shouldBe expected
+    }
+  }
+
 }
