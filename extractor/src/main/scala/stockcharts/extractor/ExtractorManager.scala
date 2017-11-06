@@ -64,7 +64,7 @@ class PricesExtractor(client: ThrottledQuandlClient, stock: Stock)(implicit mate
   implicit val iSystem = context.system
 
   val log = LoggerFactory.getLogger(this.getClass)
-  val timeout = 4 seconds
+  val timeout = 10 seconds
 
   def checkPricesState(): Future[PricesState] = KafkaUtils
     .isTopicEmpty(stock.topic, timeout)

@@ -14,7 +14,7 @@ var id2ParamName = {
 };
 var inputIds = Object.keys(id2ParamName);
 
-var serverUri = "ws://localhost:8081/simulate";
+var serverUri;
 var stock2Id = new Map();
 var websocket;
 
@@ -30,8 +30,8 @@ var indicatorLevels = [];
 
 $(function(){
      initStockList();
+     initServerUrl();
      initInputs();
-     $("#start-btn").click(startBtnHandler);
      chart = createChart();
 });
 
@@ -91,6 +91,15 @@ function startBtnHandler() {
     }
 
     startChartUpdating();
+}
+
+function initServerUrl() {
+    fetch("/simulation-url").then(function(response) {
+      return response.text();
+    }).then(function(url) {
+      serverUri = "ws://" + url;
+      $("#start-btn").click(startBtnHandler);
+    })
 }
 
 function initStockList() {
