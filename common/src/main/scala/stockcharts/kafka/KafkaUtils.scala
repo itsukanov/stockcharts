@@ -20,7 +20,7 @@ object KafkaUtils {
     import system.dispatcher
 
     KafkaSource(topic, groupId = s"checking_for_empty_$topic", OffsetReset.Earliest)
-      .completionTimeout(timeOut)
+      .completionTimeout(timeOut) // todo find more stable and fast solution
       .toMat(Sink.headOption)(Keep.right)
       .run()
       .recover {

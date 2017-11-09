@@ -4,12 +4,16 @@ import akka.http.scaladsl.server.Directives._
 import stockcharts.Config.Stocks
 import stockcharts.json.JsonConverting
 
-trait Routing {
+class Routing(simulationUrl: String) {
 
   val route =
     path("simulate") {
       get {
         getFromResource("web/index.html")
+      }
+    } ~ path("simulation-url") {
+      get {
+        complete(simulationUrl)
       }
     } ~ path("stocks") {
       get {
