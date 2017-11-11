@@ -1,0 +1,38 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: kafka-deployment
+  labels:
+    app: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      containers:
+      - name: kafka
+        image: gcr.io/stockcharts-185610/stockcharts/kafka:0.1.1
+        ports:
+        - containerPort: 6001
+        env:
+        - name: KAFKA_SERVICE
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: kafka-service
+spec:
+  selector:
+    app: kafka
+  ports:
+  - protocol: TCP
+    port: 6001
+    targetPort: 6001

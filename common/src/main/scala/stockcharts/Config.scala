@@ -47,11 +47,12 @@ object Config {
   }
 
   object SimulationAppConf {
-    val host = sys.env.getOrElse("SIMULATION_APP_HOST", conf.getString("simulation.host"))
-    val port = sys.env.get("SIMULATION_APP_PORT").map(_.toInt)
-      .getOrElse(conf.getInt("simulation.port"))
+    val host = conf.getString("simulation.host")
+    val port = conf.getInt("simulation.port")
 
     val serverUrl = s"$host:$port"
+    val simulationPath = "simulate"
+    val simulationUrl = s"$serverUrl/$simulationPath"
   }
 
   object ZooKeeper {
@@ -62,10 +63,8 @@ object Config {
   }
 
   object Kafka {
-
-    val host = sys.env.getOrElse("KAFKA_HOST", conf.getString("kafka.host"))
-    val port = sys.env.get("KAFKA_PORT").map(_.toInt)
-      .getOrElse(conf.getInt("kafka.port"))
+    val host = conf.getString("kafka.host")
+    val port = conf.getInt("kafka.port")
 
     val serverUrl = s"$host:$port"
 

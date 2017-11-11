@@ -12,12 +12,11 @@ import scala.util.{Failure, Success}
 object UIApp extends App {
 
   val log = LoggerFactory.getLogger(this.getClass)
-  val simulationUrl = s"${SimulationAppConf.serverUrl}/simulate"
 
   implicit val system = ActorSystem("ui-app")
   implicit val materializer = ActorMaterializer()
 
-  val binding = Http().bindAndHandle(new Routing(simulationUrl).route, UI.host, UI.port)
+  val binding = Http().bindAndHandle(new Routing(SimulationAppConf.simulationUrl).route, UI.host, UI.port)
   binding.onComplete {
     case Success(_) => log.info("Rest api binding has been successfully done")
     case Failure(thr) =>

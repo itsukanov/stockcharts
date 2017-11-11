@@ -1,6 +1,6 @@
 import Dependencies._
 
-version in ThisBuild := "0.1.0"
+version in ThisBuild := "0.1.2"
 organization := "com.itsukanov"
 
 scalaVersion in ThisBuild := "2.12.3"
@@ -21,7 +21,7 @@ lazy val extractor = project.in(file("extractor"))
   .settings(
     mainClass in Compile := Some("stockcharts.extractor.ExtractorApp"),
     dockerBaseImage      := jre,
-    dockerRepository     := dockerRepo
+    dockerRepository     := dockerRepo // todo find the way to define globally
   )
 
 lazy val simulation = project.in(file("simulation"))
@@ -47,3 +47,9 @@ lazy val ui = project.in(file("ui"))
 lazy val kafka = project.in(file("kafka"))
   .dependsOn(common)
   .settings(kafkaDeps)
+  .enablePlugins(JavaAppPackaging, DockerPlugin, AshScriptPlugin)
+  .settings(
+    mainClass in Compile := Some("stockcharts.kafka.KafkaApp"),
+    dockerBaseImage      := jre,
+    dockerRepository     := dockerRepo
+  )
