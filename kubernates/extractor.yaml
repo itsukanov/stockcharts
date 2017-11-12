@@ -1,0 +1,22 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: extractor-deployment
+  labels:
+    app: extractor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: extractor
+  template:
+    metadata:
+      labels:
+        app: extractor
+    spec:
+      containers:
+      - name: extractor
+        image: gcr.io/stockcharts-185610/stockcharts/extractor:0.1.1
+        env:
+        - name: KAFKA_SERVICE
+          value: "kafka-service"

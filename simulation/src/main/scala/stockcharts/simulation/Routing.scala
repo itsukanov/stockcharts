@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.scaladsl.{Flow, Source}
 import org.json4s.native.JsonMethods._
 import org.slf4j.LoggerFactory
-import stockcharts.Config.Stocks
+import stockcharts.Config.{SimulationAppConf, Stocks}
 import stockcharts.models.{Money, Price, SimulationConf, Stock}
 import stockcharts.simulation.uisupport.{InvalidConfig, SimulationDone, UIModel}
 
@@ -73,7 +73,7 @@ class Routing(simulationFactory: SimulationConf => Flow[Price, UIModel, _],
     }
 
   val route =
-    path("simulate") {
+    path(SimulationAppConf.simulationPath) {
       handleWebSocketMessages(wsCommandHandler)
     }
 
