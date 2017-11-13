@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: kafka
-        image: gcr.io/stockcharts-185610/stockcharts/kafka:0.1.1
+        image: stockcharts/kafka:0.1.2
         ports:
         - containerPort: 6001
         env:

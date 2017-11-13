@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: simulation
-        image: gcr.io/stockcharts-185610/stockcharts/simulation:0.1.2
+        image: stockcharts/simulation:0.1.2
         ports:
         - containerPort: 8081
         env:
