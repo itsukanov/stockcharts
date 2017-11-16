@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: extractor
-        image: gcr.io/stockcharts-185610/stockcharts/extractor:0.1.1
+        image: stockcharts/extractor:0.1.2
         env:
         - name: KAFKA_SERVICE
           value: "kafka-service"

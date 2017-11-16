@@ -18,7 +18,7 @@ object UIApp extends App {
 
   val binding = Http().bindAndHandle(new Routing(SimulationAppConf.simulationUrl).route, UI.host, UI.port)
   binding.onComplete {
-    case Success(_) => log.info("Rest api binding has been successfully done")
+    case Success(_) => log.info(s"Rest api binding has been successfully done - http://${UI.host}:${UI.port}/simulate")
     case Failure(thr) =>
       log.error("Rest api binding has been failed", thr)
       sys.exit(1)
