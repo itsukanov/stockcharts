@@ -18,7 +18,7 @@ I used free tier of GCP without static ips or DNS names so there can be some iss
 
 A few words about the application, an example page from Stockcharts:
 
-![Stockcharts example page](https://github.com/iatsukanov/stockcharts/blob/feature/readme/docs/stockcharts_example_page.png)
+![Stockcharts example page](./docs/stockcharts_example_page.png)
 
 As you can see it's a single page application where you can test simple trading strategies on historical data.
 You can set conditions for opening orders by choosing overbought and oversold levels of RSI indicator and conditions for closing orders by setting take profit and stop loss values.
@@ -27,7 +27,7 @@ The result of testing is the chart where you can find your balance and equity ch
 
 ## Architecture
 
-![Architecture](https://github.com/iatsukanov/stockcharts/blob/feature/readme/docs/stockcharts_architecture.png)
+![Architecture](./docs/stockcharts_architecture.png)
 
 #### UI
 A user through a Load Balancer (LB) goes to one of the UI instances.
