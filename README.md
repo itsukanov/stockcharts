@@ -4,7 +4,7 @@ Why did I write this project?
 
 The first reason is that I wanted to try several new technologies such as akka-stream, docker and Kubernetes.
 Hello world examples on the internet are good for getting started but usually, it's not enough to be sure that you can use a technology indeed.
-It'll be much better to write a nontrivial and working application using these new technologies.
+It would be much better to write a nontrivial and working application using these new technologies.
 
 The second reason is that during job interviews I was sometimes asked to show examples of code written by me.
 Stockcharts can be used for this purpose, also, I hope it helps me to save time by skipping writing a test task.
@@ -12,7 +12,7 @@ Stockcharts can be used for this purpose, also, I hope it helps me to save time 
 ## Stockcharts
 
 You can try working application [here](http://35.193.177.69:8080/simulate?stock=IBM&overbought=70&oversold=30&takeProfit=20&stopLoss=4).
-The app is running in Google Cloud Platform over Kubernetes.
+The app is running on Google Cloud Platform over Kubernetes.
 I used free tier of GCP without static ips or DNS names so there can be some issues with availability through the link above (e.g. the app was accidentally redeployed to a new ip).
 
 
@@ -70,7 +70,7 @@ The most interesting part of Stockcharts is the simulation of a trading strategy
 If you want to take a look at the implementation you can start with the [simulation route](https://github.com/iatsukanov/stockcharts/blob/master/simulation/src/main/scala/stockcharts/simulation/Routing.scala)
 or from [unit tests](https://github.com/iatsukanov/stockcharts/tree/feature/readme/simulation/src/test/scala/stockcharts/simulation).
 Briefly, there are several flows that enrich data.
-For keeping state (to calculate new indicator value we have to know several previous prices, to calculate new balance we have to know previous balance and so on) they use actors.
+For keeping state (to calculate new indicator value we have to know several previous prices, to calculate new balance we have to know previous balance and so on) I used actors.
 
 
 ## Start up
@@ -162,7 +162,7 @@ UI doesn't have features such as you can't set the lot size for orders, initial 
 I didn't spend time for their realization because it was outside of my aims (see the [motivation](#motivation) part).
 Also, there are several bugs:
 * pins for opening and closing orders hide each other when they are on the same candle
-* the animation speed degrades with increasing amount of data on the chart
+* the animation speed degrades with increasing amount of data on the chart (on mobile devices it works slowly from the beginning)
 * maybe something else
 
 Quality of the ui code and design of the page are far from ideal because I'm a backend developer.
